@@ -68,6 +68,7 @@ The NeuroAccess system consists of four main layers:
 This modular architecture allows NeuroAccess to **analyze webpages, calculate accessibility scores, and dynamically adapt content for different cognitive needs.**
 
 ## Project Structure
+## Project Structure
 
 neuroaccess/
 │
@@ -95,4 +96,4 @@ neuroaccess/
 │   └── elderly.js
 │
 └── README.md
-
+```
