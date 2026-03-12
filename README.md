@@ -59,7 +59,6 @@ The extension can:
 
 # Project Structure
 
-
 neuroaccess/
 │
 ├── extension/
