@@ -68,32 +68,32 @@ The NeuroAccess system consists of four main layers:
 This modular architecture allows NeuroAccess to **analyze webpages, calculate accessibility scores, and dynamically adapt content for different cognitive needs.**
 
 ## Project Structure
-## Project Structure
 
 neuroaccess/
 │
 ├── extension/
-│   ├── manifest.json
-│   ├── popup/
-│   ├── options/
-│   ├── content/
-│   └── styles/
+│ ├── manifest.json
+│ ├── popup/
+│ ├── options/
+│ ├── content/
+│ └── styles/
 │
 ├── backend/
-│   ├── server.js
-│   └── api/
+│ ├── server.js
+│ └── api/
 │
 ├── audit-engine/
-│   ├── contrast.js
-│   ├── cognitiveLoad.js
-│   └── layoutAnalysis.js
+│ ├── contrast.js
+│ ├── cognitiveLoad.js
+│ └── layoutAnalysis.js
 │
 ├── modes/
-│   ├── dyslexia.js
-│   ├── adhd.js
-│   ├── autism.js
-│   ├── literacy.js
-│   └── elderly.js
+│ ├── dyslexia.js
+│ ├── adhd.js
+│ ├── autism.js
+│ ├── literacy.js
+│ └── elderly.js
 │
 └── README.md
 ```
+
