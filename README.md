@@ -69,6 +69,22 @@ This modular architecture allows NeuroAccess to **analyze webpages, calculate ac
 
 ## Project Structure
 
-<img width="607" height="1057" alt="image" src="https://github.com/user-attachments/assets/7cbea967-3d7f-4d5e-885e-231f8346d3c9" />
+neuroaccess/
+│
+├── extension/
+│   ├── manifest.json
+│   │
+│   ├── content/
+│   │   └── content.js
+│   │
+│   ├── popup/
+│   │   ├── popup.html
+│   │   ├── popup.css
+│   │   └── popup.js
+│   │
+│   └── styles/
+│       └── accessibility.css
+│
+└── README.md
 
 ```
