@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NeuroAccess</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="popup.css">
+</head>
+
+<body>
+
+  <!-- ── Top bar ── -->
+  <div class="topbar">
+    <div class="brand">
+      <svg width="30" height="30" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;border-radius:8px;">
+        <rect width="100" height="100" rx="16" fill="#4B0FCC"/>
+        <circle cx="30" cy="58" r="12" fill="#ffffff"/>
+        <path d="M20 75 L20 30 C20 24 26 20 32 23 C38 26 40 32 40 38 L40 52 C46 44 54 34 60 27 C65 21 72 20 77 24 C82 28 82 35 82 42 L82 72 L68 72 L68 48 C62 56 54 66 48 73 C44 78 38 80 33 77 C27 74 20 75 20 75 Z" fill="#00E5FF"/>
+        <ellipse cx="74" cy="28" rx="9" ry="12" fill="#00E5FF"/>
+      </svg>
+      <span class="brand-name">NeuroAccess</span>
+    </div>
+    <span class="cog">⚙</span>
+  </div>
+
+  <!-- ── Complexity score ── -->
+  <div class="score-row">
+    <div class="score-ring">
+      <svg viewBox="0 0 62 62">
+        <circle class="sr-track" cx="31" cy="31" r="27" fill="none" stroke-width="5" />
+        <circle class="sr-fill" id="srFill" cx="31" cy="31" r="27" fill="none" stroke-width="5" />
+      </svg>
+      <div class="score-num" id="scoreNum">…</div>
+    </div>
+    <div class="score-info">
+      <div class="score-chips">
+        <span class="chip c-g" id="chipEasy">Easy</span>
+        <span class="chip c-y" id="chipMod">Moderate</span>
+        <span class="chip c-r" id="chipHard">Complex</span>
+      </div>
+      <div class="score-lbl" id="scoreLbl">Analyzing page…</div>
+    </div>
+  </div>
+
+  <!-- ── Audit row ── -->
+  <div class="audit-bar">
+    <span class="audit-idle">♿ Accessibility Audit (WCAG)</span>
+    <button class="audit-btn" id="runAuditBtn">Run</button>
+  </div>
+  <div class="audit-results hidden" id="auditResults"></div>
+
+  <!-- ── Mode label ── -->
+  <div class="modes-lbl">Adaptive Modes</div>
+
+  <!-- ── Mode grid ── -->
+  <div class="modes-grid">
+
+    <button class="mode-btn mode-dys" id="dyslexia" data-mode="dyslexia" aria-pressed="false">
+      <span class="mi">📖</span>
+      <span class="mn">Dyslexia</span>
+    </button>
+
+    <button class="mode-btn mode-adhd" id="adhd" data-mode="adhd" aria-pressed="false">
+      <span class="mi">🎯</span>
+      <span class="mn">ADHD Focus</span>
+    </button>
+
+    <button class="mode-btn mode-autism" id="autism" data-mode="autism" aria-pressed="false">
+      <span class="mi">🗂️</span>
+      <span class="mn">Autism</span>
+
+    </button>
+
+    <button class="mode-btn mode-lit" id="literacy" data-mode="literacy" aria-pressed="false">
+      <span class="mi">🔤</span>
+      <span class="mn">Low Literacy</span>
+
+    </button>
+
+    <button class="mode-btn mode-eld full" id="elderly" data-mode="elderly" aria-pressed="false">
+      <span class="mi">👴</span>
+      <span class="mn">Elderly Mode</span>
+    </button>
+
+  </div>
+
+  <!-- ── Tools ── -->
+  <div class="modes-lbl" style="margin-top:10px">Tools</div>
+  <div class="tools-row">
+    <button class="tool-btn" id="guide" aria-pressed="false">
+      <span>📏</span>
+      <span>Reading Guide</span>
+      <span class="tool-pill" id="guideStatus">Off</span>
+    </button>
+    <button class="tool-btn" id="simplify" aria-pressed="false">
+      <span>✏️</span>
+      <span>Simplify Text</span>
+      <span class="tool-pill" id="simplifyStatus">Off</span>
+    </button>
+  </div>
+
+  <!-- ── Active strip ── -->
+  <div class="active-strip hidden" id="activeStrip">
+    <span class="as-txt" id="asLabel">Mode active</span>
+    <button class="as-off" id="resetBtn">Reset All</button>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+
+</html>

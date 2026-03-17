@@ -1,0 +1,33 @@
+{
+    "manifest_version": 3,
+    "name": "NeuroAccess",
+    "description": "Cognitive accessibility browser extension — adaptive reading modes for dyslexia, ADHD, autism, and more.",
+    "version": "1.0",
+    "permissions": [
+        "activeTab",
+        "scripting",
+        "storage"
+    ],
+    "host_permissions": [
+        "<all_urls>"
+    ],
+    "action": {
+        "default_popup": "popup/popup.html",
+        "default_title": "NeuroAccess"
+    },
+    "content_scripts": [
+        {
+            "matches": ["<all_urls>"],
+            "js": ["content/content.js"],
+            "css": ["styles/accessibility.css"],
+            "run_at": "document_idle",
+            "all_frames": false
+        }
+    ],
+    "web_accessible_resources": [
+        {
+            "resources": ["lib/axe.min.js"],
+            "matches": ["<all_urls>"]
+        }
+    ]
+}

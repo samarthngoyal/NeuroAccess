@@ -1,0 +1,41 @@
+/* NeuroAccess — accessibility.css
+   Base stylesheet injected on every page.
+   IMPORTANT: These styles must NOT affect page layout on their own.
+   Mode-specific overrides are injected dynamically by content.js.
+*/
+
+/* Reading guide overlay */
+#na-reading-guide {
+    position: fixed !important;
+    left:     0     !important;
+    width:    100%  !important;
+    pointer-events: none !important;
+    z-index:  2147483647 !important;
+    box-sizing: border-box !important;
+}
+
+/* Elements hidden by NeuroAccess modes */
+[data-na-hidden="true"] {
+    display:    none        !important;
+    visibility: hidden      !important;
+}
+
+/* ── ADHD Focus mode — applied via data attribute ── */
+[data-na-mode="adhd"] body {
+    background: #FAFAFA !important;
+}
+
+/* ── Dyslexia mode reading width cap ── */
+[data-na-mode="dyslexia"] p {
+    max-width: 72ch;
+}
+
+/* ── Autism mode — no-motion media query reinforcement ── */
+[data-na-mode="autism"] *,
+[data-na-mode="autism"] *::before,
+[data-na-mode="autism"] *::after {
+    animation:           none !important;
+    animation-duration:  0s   !important;
+    transition:          none !important;
+    transition-duration: 0s   !important;
+}
