@@ -69,30 +69,6 @@ This modular architecture allows NeuroAccess to **analyze webpages, calculate ac
 
 ## Project Structure
 
-neuroaccess/
-│
-├── extension/
-│ ├── manifest.json
-│ ├── popup/
-│ ├── options/
-│ ├── content/
-│ └── styles/
-│
-├── backend/
-│ ├── server.js
-│ └── api/
-│
-├── audit-engine/
-│ ├── contrast.js
-│ ├── cognitiveLoad.js
-│ └── layoutAnalysis.js
-│
-├── modes/
-│ ├── dyslexia.js
-│ ├── adhd.js
-│ ├── autism.js
-│ ├── literacy.js
-│ └── elderly.js
-│
-└── README.md
+<img width="607" height="1057" alt="image" src="https://github.com/user-attachments/assets/7cbea967-3d7f-4d5e-885e-231f8346d3c9" />
+
 ```
