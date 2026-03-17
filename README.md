@@ -53,7 +53,6 @@ The extension can:
 - MutationObserver API
 - axe-core accessibility engine
 
-
 ---
 
 ### Architecture Overview
@@ -66,6 +65,8 @@ The NeuroAccess system consists of four main layers:
 - **Backend Services** – Handles optional processing such as advanced text simplification.
 
 This modular architecture allows NeuroAccess to **analyze webpages, calculate accessibility scores, and dynamically adapt content for different cognitive needs.**
+
+---
 
 ## Project Structure
 
