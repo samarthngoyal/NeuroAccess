@@ -3,8 +3,6 @@
 NeuroAccess is a browser extension designed to improve cognitive accessibility on the web.  
 It helps users with dyslexia, ADHD, autism, low literacy, and elderly users better understand online content by simplifying text and adapting webpage layouts.
 
----
-
 ## Problem
 
 Many websites are designed assuming users can easily process dense text and complex layouts.  
@@ -16,8 +14,6 @@ However, people with cognitive differences or reading difficulties often struggl
 - Poor contrast and layout design  
 
 This makes accessing important information online difficult.
-
----
 
 ## Solution
 
@@ -31,8 +27,6 @@ The extension can:
 - Highlight important information  
 - Improve readability and contrast  
 
----
-
 ## Key Features
 
 - Cognitive Accessibility Score  
@@ -42,8 +36,6 @@ The extension can:
 - Text Simplification Engine  
 - Dynamic Webpage Adaptation  
 
----
-
 ## Tech Stack
 
 - HTML  
@@ -52,8 +44,6 @@ The extension can:
 - Chrome Extension Manifest V3  
 - MutationObserver API  
 - axe-core accessibility engine  
-
----
 
 ## Architecture Overview
 
@@ -65,8 +55,6 @@ The NeuroAccess system consists of four main layers:
 - Backend Services – Handles optional processing such as advanced text simplification  
 
 This modular architecture allows NeuroAccess to analyze webpages, calculate accessibility scores, and dynamically adapt content for different cognitive needs.
-
----
 
 ## Project Structure
 
