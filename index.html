@@ -1,0 +1,3477 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>NeuroAccess — The Web, Your Way</title>
+  <meta
+    content="A free browser extension that instantly adapts any website for people with dyslexia, ADHD, autism, low literacy, or age-related needs."
+    name="description" />
+  <link href="https://fonts.googleapis.com" rel="preconnect" />
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap"
+    rel="stylesheet" />
+  <style>
+    /* ============================================================
+   DESIGN TOKENS
+   Clean Tech Theme — Based on image_2.png
+============================================================ */
+    :root {
+      /* Surfaces */
+      --cream: #af1f5f9;
+      /* Very Light Gray approx (actually keeping a readable off-white hex below) */
+      /* Re-evaluating based on standard Very Light Gray / Clean Tech */
+      --cream: #F1F5F9;
+      --cream2: #E2E8F0;
+      --cream3: #CBD5E1;
+      --white: #ffffff;
+      --card-bg: #ffffff;
+
+      /* Ink — WCAG AA+ on all surfaces */
+      --ink: #0F172A;
+      /* Dark Blue */
+      --ink2: #334155;
+      /* Dark slate */
+      --ink3: #64748B;
+      /* Medium slate */
+
+      /* Brand colours — one per user type */
+      --teal: #3B82F6;
+      /* Electric Blue */
+      --teal-l: #DBEAFE;
+      --coral: #06B6D4;
+      /* Cyan */
+      --coral-l: #CFFAFE;
+      --violet: #8B5CF6;
+      /* Purple */
+      --violet-l: #EDE9FE;
+      --sky: #0EA5E9;
+      --sky-l: #E0F2FE;
+      --rose: #F43F5E;
+      --rose-l: #FFE4E6;
+
+      /* Global accent */
+      --accent: #3B82F6;
+      --focus: #F59E0B;
+
+      /* Type */
+      --head: 'Plus Jakarta Sans', sans-serif;
+      --body: 'Lexend', sans-serif;
+
+      /* Radii & shadows */
+      --r: 12px;
+      --r2: 20px;
+      --r3: 32px;
+      --sh: 0 2px 12px rgba(15, 23, 42, .06);
+      --sh2: 0 12px 40px rgba(15, 23, 42, .11);
+      --sh3: 0 24px 64px rgba(15, 23, 42, .15);
+
+      /* Controllable */
+      --fscale: 1;
+    }
+
+    /* High contrast override */
+    body.hc {
+      --cream: #fff;
+      --cream2: #f0f0f0;
+      --cream3: #ddd;
+      --ink: #000;
+      --ink2: #111;
+      --ink3: #333;
+    }
+
+    /* Reduce motion */
+    @media (prefers-reduced-motion:reduce) {
+
+      *,
+      *::before,
+      *::after {
+        animation-duration: .01ms !important;
+        transition-duration: .01ms !important;
+      }
+    }
+
+    body.no-anim *,
+    body.no-anim *::before,
+    body.no-anim *::after {
+      animation-duration: .01ms !important;
+      transition-duration: .01ms !important;
+    }
+
+    /* Dyslexia font */
+    body.dys-f * {
+      font-family: 'Lexend', sans-serif !important;
+      letter-spacing: .06em !important;
+      word-spacing: .14em !important;
+      line-height: 2 !important;
+    }
+
+
+    /* ============================================================
+   RESET + BASE
+============================================================ */
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      font-size: calc(17px * var(--fscale));
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: var(--cream);
+      color: var(--ink);
+      font-family: var(--body);
+      line-height: 1.8;
+      overflow-x: hidden;
+    }
+
+    :focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 3px;
+      border-radius: 5px;
+    }
+
+    :focus:not(:focus-visible) {
+      outline: none;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+    }
+
+    /* ============================================================
+   SKIP LINKS
+============================================================ */
+    .skip-nav {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 9999;
+    }
+
+    .skip-link {
+      position: absolute;
+      background: var(--accent);
+      color: #fff;
+      font-family: var(--body);
+      font-weight: 800;
+      font-size: 14px;
+      padding: 10px 20px;
+      text-decoration: none;
+      border-radius: 0 0 8px 0;
+      transform: translateY(-110%);
+      transition: transform .2s;
+    }
+
+    .skip-link:focus {
+      transform: translateY(0);
+    }
+
+    /* ============================================================
+   ACCESSIBILITY TOOLBAR
+============================================================ */
+
+    /* ============================================================
+   NAV
+============================================================ */
+    #nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 800;
+      padding: 0;
+      transition: all .3s;
+    }
+
+    #nav.scrolled {
+      background: rgba(250, 247, 242, .97);
+      backdrop-filter: blur(18px) saturate(1.6);
+      border-bottom: 2px solid var(--cream3);
+      box-shadow: var(--sh);
+    }
+
+    .nav-wrap {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 16px 28px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--ink);
+      font-family: var(--head);
+      font-weight: 800;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .nav-mark {
+      width: 42px;
+      height: 42px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .nav-mark svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 6px;
+      list-style: none;
+      flex: 1;
+      justify-content: center;
+    }
+
+    .nav-links a {
+      color: var(--ink2);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 800;
+      padding: 7px 13px;
+      border-radius: 8px;
+      transition: all .15s;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .nav-text-grad {
+      background: linear-gradient(135deg, var(--teal), var(--violet));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .nav-links a:hover {
+      background: var(--cream2);
+    }
+
+    .nav-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--teal);
+      color: #fff;
+      border: 2px solid transparent;
+      padding: 10px 22px;
+      border-radius: 11px;
+      font-family: var(--body);
+      font-weight: 800;
+      font-size: 14px;
+      text-decoration: none;
+      min-height: 44px;
+      flex-shrink: 0;
+      transition: all .2s;
+    }
+
+    .nav-cta:hover {
+      background: #2563EB;
+      box-shadow: 0 6px 20px rgba(59, 130, 246, .3);
+      transform: translateY(-1px);
+    }
+
+    #mob-btn {
+      display: none;
+      background: none;
+      border: 2px solid var(--cream3);
+      color: var(--ink);
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      font-size: 20px;
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      margin-left: auto;
+    }
+
+    /* mobile drawer */
+    #mob-nav {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: var(--cream);
+      z-index: 790;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      padding: 40px;
+    }
+
+    #mob-nav.open {
+      display: flex;
+    }
+
+    #mob-nav a {
+      font-family: var(--head);
+      font-weight: 800;
+      font-size: 28px;
+      color: var(--ink);
+      text-decoration: none;
+    }
+
+    #mob-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: none;
+      border: 2px solid var(--cream3);
+      color: var(--ink);
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      font-size: 22px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ============================================================
+   SHARED SECTION STYLES
+============================================================ */
+    .section {
+      padding: 104px 0;
+    }
+
+    .section.alt {
+      background: var(--cream2);
+    }
+
+    .section.dark {
+      background: var(--ink);
+    }
+
+    .wrap {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 28px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .14em;
+      color: var(--teal);
+      margin-bottom: 12px;
+    }
+
+    .eyebrow::before {
+      content: '';
+      width: 20px;
+      height: 2px;
+      background: currentColor;
+      border-radius: 2px;
+    }
+
+    h2.s-title {
+      font-family: var(--head);
+      font-weight: 800;
+      font-size: clamp(28px, 3.5vw, 46px);
+      line-height: 1.12;
+      letter-spacing: -.025em;
+      color: var(--ink);
+      margin-bottom: 14px;
+    }
+
+    h2.s-title b {
+      font-weight: 800;
+      color: var(--teal);
+      font-style: normal;
+    }
+
+    .s-sub {
+      font-size: clamp(15px, 1.5vw, 18px);
+      color: var(--ink2);
+      line-height: 1.85;
+      max-width: 520px;
+      margin-bottom: 52px;
+    }
+
+    .s-sub.center {
+      margin: 0 auto 52px;
+      text-align: center;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--body);
+      font-weight: 800;
+      font-size: 15px;
+      padding: 13px 28px;
+      border-radius: 12px;
+      text-decoration: none;
+      border: 2px solid transparent;
+      min-height: 50px;
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+    .btn-teal {
+      background: var(--teal);
+      color: #fff;
+    }
+
+    .btn-teal:hover {
+      background: #0a6b5e;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 28px rgba(14, 126, 111, .3);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--ink);
+      border-color: var(--cream3);
+    }
+
+    .btn-outline:hover {
+      border-color: var(--teal);
+      color: var(--teal);
+      background: var(--teal-l);
+    }
+
+    .btn-white {
+      background: #fff;
+      color: var(--ink);
+    }
+
+    .btn-white:hover {
+      box-shadow: var(--sh2);
+      transform: translateY(-1px);
+    }
+
+    .btn-ghost-w {
+      background: transparent;
+      color: #fff;
+      border-color: rgba(255, 255, 255, .45);
+    }
+
+    .btn-ghost-w:hover {
+      border-color: #fff;
+      background: rgba(255, 255, 255, .08);
+    }
+
+    /* Cards */
+    .card {
+      background: var(--card-bg);
+      border: 2px solid var(--cream3);
+      border-radius: var(--r2);
+      padding: 28px 24px;
+      transition: all .25s;
+    }
+
+    .card:hover {
+      box-shadow: var(--sh2);
+      transform: translateY(-3px);
+      border-color: #c5bdb5;
+    }
+
+    /* Reveal on scroll */
+    .rv {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity .6s ease, transform .6s ease;
+    }
+
+    .rv.vis {
+      opacity: 1;
+      transform: none;
+    }
+
+    .d1 {
+      transition-delay: .08s
+    }
+
+    .d2 {
+      transition-delay: .16s
+    }
+
+    .d3 {
+      transition-delay: .24s
+    }
+
+    .d4 {
+      transition-delay: .32s
+    }
+
+    .d5 {
+      transition-delay: .40s
+    }
+
+    /* ============================================================
+   §1  HERO
+============================================================ */
+    #hero {
+      min-height: 100vh;
+      padding: 148px 0 80px;
+      position: relative;
+      overflow: hidden;
+      background: var(--cream);
+      display: flex;
+      align-items: center;
+    }
+
+    /* Soft radial mesh background */
+    #hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 700px 600px at 80% 30%, rgba(14, 126, 111, .09) 0%, transparent 70%),
+        radial-gradient(ellipse 500px 500px at 10% 80%, rgba(212, 80, 10, .07) 0%, transparent 65%),
+        radial-gradient(ellipse 400px 400px at 55% 70%, rgba(94, 53, 177, .06) 0%, transparent 60%);
+    }
+
+    /* Floating circles decoration */
+    .hero-circles {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .hc-ring {
+      position: absolute;
+      border-radius: 50%;
+      border: 2px solid rgba(14, 126, 111, .12);
+      animation: hring 18s linear infinite;
+    }
+
+    .hc-ring:nth-child(1) {
+      width: 500px;
+      height: 500px;
+      top: -120px;
+      right: -80px;
+      animation-duration: 22s;
+    }
+
+    .hc-ring:nth-child(2) {
+      width: 320px;
+      height: 320px;
+      bottom: 40px;
+      left: -60px;
+      animation-direction: reverse;
+    }
+
+    .hc-ring:nth-child(3) {
+      width: 200px;
+      height: 200px;
+      top: 200px;
+      right: 10%;
+      animation-duration: 14s;
+    }
+
+    @keyframes hring {
+      from {
+        transform: rotate(0)
+      }
+
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    #hero .wrap {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+    }
+
+    /* Left */
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--teal-l);
+      border: 2px solid var(--teal);
+      color: var(--teal);
+      padding: 7px 16px;
+      border-radius: 30px;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .04em;
+      margin-bottom: 20px;
+    }
+
+    .hero-dot {
+      width: 7px;
+      height: 7px;
+      background: var(--teal);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1)
+      }
+
+      50% {
+        opacity: .35;
+        transform: scale(.8)
+      }
+    }
+
+    h1.hero-h1 {
+      font-family: var(--head);
+      font-weight: 800;
+      font-size: clamp(36px, 5vw, 64px);
+      line-height: 1.08;
+      letter-spacing: -.03em;
+      color: var(--ink);
+      margin-bottom: 22px;
+    }
+
+    h1.hero-h1 span {
+      color: var(--teal);
+      position: relative;
+    }
+
+    h1.hero-h1 span::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: -4px;
+      right: 0;
+      height: 4px;
+      background: var(--teal);
+      border-radius: 2px;
+      transform: scaleX(0);
+      transform-origin: left;
+      animation: underline-in .8s .5s cubic-bezier(.16, 1, .3, 1) forwards;
+    }
+
+    @keyframes underline-in {
+      to {
+        transform: scaleX(1);
+      }
+    }
+
+    .hero-sub {
+      font-size: clamp(16px, 1.6vw, 19px);
+      color: var(--ink2);
+      line-height: 1.85;
+      max-width: 480px;
+      margin-bottom: 34px;
+    }
+
+    .hero-ctas {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .hero-trust {
+      margin-top: 30px;
+      padding-top: 28px;
+      border-top: 2px solid var(--cream3);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .trust-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink2);
+    }
+
+    .trust-item svg {
+      color: var(--teal);
+    }
+
+    /* Right — extension popup visual */
+    .hero-popup-wrap {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+
+    .popup-glow {
+      position: absolute;
+      width: 320px;
+      height: 320px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(14, 126, 111, .14) 0%, transparent 70%);
+      animation: glow-pulse 5s ease-in-out infinite;
+    }
+
+    @keyframes glow-pulse {
+
+      0%,
+      100% {
+        transform: scale(1);
+        opacity: 1
+      }
+
+      50% {
+        transform: scale(1.15);
+        opacity: .6
+      }
+    }
+
+    .ext-card {
+      width: 290px;
+      background: var(--white);
+      border: 2px solid var(--cream3);
+      border-radius: 20px;
+      overflow: hidden;
+      position: relative;
+      z-index: 2;
+      box-shadow: var(--sh3);
+      animation: float 7s ease-in-out infinite;
+    }
+
+    @keyframes float {
+
+      0%,
+      100% {
+        transform: translateY(0)
+      }
+
+      50% {
+        transform: translateY(-10px)
+      }
+    }
+
+    .ext-topbar {
+      background: var(--ink);
+      padding: 11px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .ext-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ext-brand-dot {
+      width: 7px;
+      height: 7px;
+      background: #3bdc8a;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    .ext-brand-name {
+      font-family: var(--head);
+      font-weight: 800;
+      font-size: 13px;
+      color: #fff;
+    }
+
+    .ext-cog {
+      font-size: 15px;
+      opacity: .45;
+    }
+
+    .ext-score-row {
+      padding: 14px 14px 8px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .score-ring {
+      width: 62px;
+      height: 62px;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .score-ring svg {
+      width: 62px;
+      height: 62px;
+      transform: rotate(-90deg);
+    }
+
+    .sr-track {
+      stroke: var(--cream3);
+    }
+
+    .sr-fill {
+      stroke: var(--teal);
+      stroke-linecap: round;
+      stroke-dasharray: 170;
+      stroke-dashoffset: 50;
+    }
+
+    .score-num {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--head);
+      font-weight: 800;
+      font-size: 17px;
+      color: var(--teal);
+    }
+
+    .score-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px;
+    }
+
+    .chip {
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 20px;
+    }
+
+    .c-g {
+      background: var(--teal-l);
+      color: var(--teal);
+    }
+
+    .c-y {
+      background: var(--coral-l);
+      color: var(--coral);
+    }
+
+    .c-r {
+      background: var(--rose-l);
+      color: var(--rose);
+    }
+
+    .score-lbl {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--ink3);
+      text-align: center;
+      margin-top: 2px;
+    }
+
+    .ext-modes-area {
+      padding: 0 12px 14px;
+    }
+
+    .ext-modes-lbl {
+      font-size: 9px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--ink3);
+      margin-bottom: 7px;
+    }
+
+    .ext-modes-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+    }
+
+    .ext-mode-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 8px 5px;
+      border-radius: 8px;
+      border: 1.5px solid var(--cream3);
+      background: var(--cream);
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--ink2);
+      transition: all .3s;
+    }
+
+    .ext-mode-btn.active-m {
+      background: var(--teal-l);
+      border-color: var(--teal);
+      color: var(--teal);
+    }
+
+    .ext-mode-btn:last-child {
+      grid-column: span 2;
+      flex-direction: row;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .ext-mi {
+      font-size: 16px;
+    }
+
+    .ext-active-strip {
+      margin: 0 12px 12px;
+      background: var(--teal-l);
+      border: 1.5px solid var(--teal);
+      border-radius: 9px;
+      padding: 8px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .eas-txt {
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--teal);
+    }
+
+    .eas-off {
+      font-size: 9px;
+      font-weight: 700;
+      background: var(--rose-l);
+      color: var(--rose);
+      border: none;
+      padding: 3px 7px;
+      border-radius: 4px;
+    }
+
+
+    /* ============================================================
+   §2  PROBLEM
+============================================================ */
+    #problem {
+      background: var(--cream2);
+    }
+
+    .problem-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .prob-card {
+      background: var(--white);
+      border: 2px solid var(--cream3);
+      border-radius: var(--r2);
+      padding: 32px 26px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .prob-card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      border-radius: 2px 2px 0 0;
+    }
+
+    .prob-card.teal::after {
+      background: var(--teal);
+    }
+
+    .prob-card.coral::after {
+      background: var(--coral);
+    }
+
+    .prob-card.violet::after {
+      background: var(--violet);
+    }
+
+    .prob-stat {
+      font-family: var(--head);
+      font-weight: 800;
+      font-size: clamp(42px, 5vw, 58px);
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .prob-card.teal .prob-stat {
+      color: var(--teal);
+    }
+
+    .prob-card.coral .prob-stat {
+      color: var(--coral);
+    }
+
+    .prob-card.violet .prob-stat {
+      color: var(--violet);
+    }
+
+    .prob-label {
+      font-family: var(--head);
+      font-weight: 700;
+      font-size: 16px;
+      margin-bottom: 8px;
+    }
+
+    .prob-body {
+      font-size: 14px;
+      color: var(--ink2);
+      line-height: 1.72;
+    }
+
+    .problem-bottom {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 20px;
+    }
+
+    .prob-quote {
+      background: var(--ink);
+      border-radius: var(--r2);
+      padding: 36px 40px;
+      display: flex;
+      gap: 16px;
+    }
+
+    .pq-mark {
+      font-family: Georgia, serif;
+      font-size: 72px;
+      line-height: .9;
+      color: rgba(255, 255, 255, .15);
+      flex-shrink: 0;
+      margin-top: -8px;
+    }
+
+    .pq-text {
+      font-size: clamp(15px, 1.5vw, 18px);
+      font-style: italic;
+      color: rgba(255, 255, 255, .88);
+      line-height: 1.65;
+      margin-bottom: 10px;
+    }
+
+    .pq-src {
+      font-size: 13px;
+      color: rgba(255, 255, 255, .45);
+      font-style: normal;
+    }
+
+    .prob-pain-card {
+      background: var(--white);
+      border: 2px solid var(--cream3);
+      border-radius: var(--r2);
+      padding: 28px 24px;
+    }
+
+    .pp-title {
+      font-family: var(--head);
+      font-weight: 700;
+      font-size: 15px;
+      margin-bottom: 16px;
+    }
+
+    .pp-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .pp-list li {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      font-size: 14px;
+      color: var(--ink2);
+      line-height: 1.6;
+    }
+
+    .pp-x {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 1px;
+      background: var(--rose-l);
+      color: var(--rose);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+
+    /* ============================================================
+   §3  SOLUTION
+============================================================ */
+    #solution {
+      background: var(--cream);
+    }
+
+    .sol-intro {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: end;
+      margin-bottom: 52px;
+    }
+
+    .modes-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+    }
+
+    .mode-tile {
+      background: var(--white);
+      border: 2px solid var(--cream3);
+      border-radius: var(--r2);
+      padding: 24px 16px;
+      text-align: center;
+      cursor: default;
+      transition: all .25s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .mode-tile::before {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+    }
+
+    .mode-tile.t ::before {
+      background: var(--teal);
+    }
+
+    .mode-tile.co ::before {
+      background: var(--coral);
+    }
+
+    .mode-tile.vi ::before {
+      background: var(--violet);
+    }
+
+    .mode-tile.sk ::before {
+      background: var(--sky);
+    }
+
+    .mode-tile.ro ::before {
+      background: var(--rose);
+    }
+
+    .mode-tile:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--sh2);
+    }
+
+    .mt-icon {
+      font-size: 34px;
+      margin-bottom: 10px;
+    }
+
+    .mt-name {
+      font-family: var(--head);
+      font-weight: 800;
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+
+    .mode-tile.t .mt-name {
+      color: var(--teal);
+    }
+
+    .mode-tile.co .mt-name {
+      color: var(--coral);
+    }
+
+    .mode-tile.vi .mt-name {
+      color: var(--violet);
+    }
+
+    .mode-tile.sk .mt-name {
+      color: var(--sky);
+    }
+
+    .mode-tile.ro .mt-name {
+      color: var(--rose);
+    }
+
+    .mt-desc {
+      font-size: 12px;
+      color: var(--ink2);
+      line-height: 1.55;
+    }
+
+    .mt-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px;
+      justify-content: center;
+      margin-top: 10px;
+    }
+
+    .mt-tag {
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 20px;
+      background: var(--cream2);
+      color: var(--ink3);
+    }
+
+
+    /* ============================================================
+   §4  HOW IT WORKS
+============================================================ */
+    #how {
+      background: var(--cream2);
+    }
+
+    .how-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: start;
+    }
+
+    .steps {
+      display: flex;
+      flex-direction: column;
+      margin-top: 8px;
+    }
+
+    .step {
+      display: flex;
+      gap: 20px;
+      padding: 24px 0;
+      border-bottom: 2px solid var(--cream3);
+      position: relative;
+    }
+
+    .step:last-child {
+      border-bottom: none;
+    }
+
+    .step-num {
+      width: 42px;
+      height: 42px;
+      border-radius: 13px;
+      flex-shrink: 0;
+      font-family: var(--head);
+      font-weight: 800;
+      font-size: 17px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      margin-top: 2px;
+    }
+
+    .step:nth-child(1) .step-num {
+      background: var(--teal);
+    }
+
+    .step:nth-child(2) .step-num {
+      background: var(--coral);
+    }
+
+    .step:nth-child(3) .step-num {
+      background: var(--violet);
+    }
+
+    .step:nth-child(4) .step-num {
+      background: var(--sky);
+    }
+
+    h3.step-t {
+      font-family: var(--head);
+      font-weight: 800;
+      font-size: 16px;
+      margin-bottom: 5px;
+      color: var(--ink);
+    }
+
+    .step-d {
+      font-size: 14px;
+      color: var(--ink2);
+      line-height: 1.72;
+    }
+
+    .pipeline-vis {
+      background: var(--white);
+      border: 2px solid var(--cream3);
+      border-radius: var(--r2);
+      padding: 26px;
+      position: sticky;
+      top: 120px;
+    }
+
+    .pv-head {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--ink3);
+      margin-bottom: 14px;
+    }
+
+    .pv-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 10px;
+      border-radius: 9px;
+      margin-bottom: 2px;
+      border: 1.5px solid transparent;
+      transition: all .4s;
+    }
+
+    .pv-row.done {
+      opacity: .28;
+    }
+
+    .pv-row.active {
+      background: var(--teal-l);
+      border-color: var(--teal);
+    }
+
+    .pv-row.active .pv-t {
+      color: var(--teal);
+      font-weight: 800;
+    }
+
+    .pv-icon {
+      font-size: 14px;
+      min-width: 20px;
+      text-align: center;
+    }
+
+    .pv-t {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink2);
+    }
+
+    .pv-arr {
+      font-size: 11px;
+      color: var(--ink3);
+      text-align: center;
+      padding: 1px 0 1px 24px;
+    }
+
+
+    /* ============================================================
+   §5  FEATURES
+============================================================ */
+    #features {
+      background: var(--cream);
+    }
+
+    .feat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .feat-card {
+      background: var(--white);
+      border: 2px solid var(--cream3);
+      border-radius: var(--r2);
+      padding: 28px 24px;
+      transition: all .25s;
+    }
+
+    .feat-card:hover {
+      box-shadow: var(--sh2);
+      transform: translateY(-3px);
+      border-color: #bfb9b1;
+    }
+
+    .feat-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      margin-bottom: 16px;
+    }
+
+    h3.feat-t {
+      font-family: var(--head);
+      font-weight: 800;
+      font-size: 16px;
+      margin-bottom: 7px;
+      color: var(--ink);
+    }
+
+    .feat-d {
+      font-size: 14px;
+      color: var(--ink2);
+      line-height: 1.72;
+    }
+
+
+    /* ============================================================
+   §6  DEMO
+============================================================ */
+    #demo {
+      background: var(--cream2);
+    }
+
+    .demo-header {
+      text-align: center;
+      margin-bottom: 44px;
+    }
+
+    /* Mode selector tabs */
+    .demo-tabs {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 36px;
+    }
+
+    .d-tab {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: 30px;
+      border: 2px solid var(--cream3);
+      background: var(--white);
+      color: var(--ink2);
+      font-family: var(--body);
+      font-weight: 800;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all .2s;
+      min-height: 44px;
+    }
+
+    .d-tab:hover {
+      border-color: var(--ink2);
+    }
+
+    .d-tab:focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 2px;
+    }
+
+    .d-tab[data-mode="original"].on {
+      background: var(--ink);
+      color: #fff;
+      border-color: var(--ink);
+    }
+
+    .d-tab[data-mode="dyslexia"].on {
+      background: var(--sky);
+      color: #fff;
+      border-color: var(--sky);
+    }
+
+    .d-tab[data-mode="adhd"].on {
+      background: var(--coral);
+      color: #fff;
+      border-color: var(--coral);
+    }
+
+    .d-tab[data-mode="autism"].on {
+      background: var(--teal);
+      color: #fff;
+      border-color: var(--teal);
+    }
+
+    .d-tab[data-mode="literacy"].on {
+      background: var(--violet);
+      color: #fff;
+      border-color: var(--violet);
+    }
+
+    .d-tab[data-mode="elderly"].on {
+      background: var(--rose);
+      color: #fff;
+      border-color: var(--rose);
+    }
+
+    /* Browser chrome frame */
+    .demo-browser {
+      background: var(--white);
+      border: 2px solid var(--cream3);
+      border-radius: var(--r2);
+      overflow: hidden;
+      box-shadow: var(--sh3);
+    }
+
+    .browser-bar {
+      background: var(--cream2);
+      border-bottom: 2px solid var(--cream3);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .b-dots {
+      display: flex;
+      gap: 5px;
+    }
+
+    .b-dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+    }
+
+    .b-dot-r {
+      background: #ff5f56;
+    }
+
+    .b-dot-y {
+      background: #ffbe2e;
+    }
+
+    .b-dot-g {
+      background: #27c93f;
+    }
+
+    .b-url {
+      flex: 1;
+      background: var(--white);
+      border-radius: 7px;
+      padding: 5px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink3);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .b-ext {
+      background: var(--teal);
+      color: #fff;
+      border-radius: 7px;
+      padding: 5px 12px;
+      font-size: 11px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* Demo viewport */
+    .demo-viewport {
+      min-height: 420px;
+      padding: 28px 32px;
+      transition: background .35s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* ── Original ── */
+    .demo-viewport.mode-original {
+      background: #fff;
+    }
+
+    .orig-paper-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #eee;
+    }
+
+    .orig-paper-name {
+      font-family: Georgia, serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: #111;
+    }
+
+    .orig-paper-nav {
+      display: flex;
+      gap: 16px;
+    }
+
+    .orig-paper-nav span {
+      font-size: 12px;
+      color: #666;
+      cursor: default;
+    }
+
+    .orig-article-layout {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 20px;
+    }
+
+    .orig-headline {
+      font-size: 20px;
+      font-weight: 700;
+      line-height: 1.3;
+      color: #111;
+      margin-bottom: 10px;
+    }
+
+    .orig-byline {
+      font-size: 11px;
+      color: #888;
+      margin-bottom: 14px;
+    }
+
+    .orig-body p {
+      font-size: 13px;
+      line-height: 1.6;
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    .orig-sidebar-area {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .orig-ad-box {
+      border: 2px dashed #d4b800;
+      background: #fffce0;
+      padding: 12px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .orig-ad-box .ad-lbl {
+      font-size: 9px;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: #b09000;
+      letter-spacing: .1em;
+    }
+
+    .orig-ad-box p {
+      font-size: 11px;
+      color: #888;
+      margin-top: 4px;
+    }
+
+    .orig-trending {
+      background: #f5f5f5;
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    .orig-trending h4 {
+      font-size: 11px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #333;
+    }
+
+    .orig-trending a {
+      display: block;
+      font-size: 11px;
+      color: #0050aa;
+      margin-bottom: 4px;
+      text-decoration: underline;
+    }
+
+    /* ── Dyslexia Mode ── */
+    .demo-viewport.mode-dyslexia {
+      background: #fffef8;
+    }
+
+    .dys-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--sky-l);
+      border: 2px solid var(--sky);
+      color: var(--sky);
+      font-size: 11px;
+      font-weight: 800;
+      padding: 5px 14px;
+      border-radius: 20px;
+      margin-bottom: 14px;
+    }
+
+    .dys-ruler {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 34px;
+      pointer-events: none;
+      background: rgba(255, 220, 80, .3);
+      border-top: 2px solid rgba(200, 170, 0, .4);
+      border-bottom: 2px solid rgba(200, 170, 0, .4);
+      top: 160px;
+      animation: ruler-drift 6s ease-in-out infinite;
+    }
+
+    @keyframes ruler-drift {
+
+      0%,
+      100% {
+        top: 155px
+      }
+
+      50% {
+        top: 185px
+      }
+    }
+
+    .dys-p {
+      font-family: 'Lexend', sans-serif !important;
+      font-size: 16px;
+      line-height: 2.2;
+      letter-spacing: .08em;
+      word-spacing: .16em;
+      color: var(--ink);
+      margin-bottom: 8px;
+      padding: 2px 0;
+    }
+
+    .dys-p.hl {
+      background: rgba(220, 240, 255, .5);
+      border-radius: 4px;
+      padding: 3px 6px;
+    }
+
+    /* ── ADHD Mode ── */
+    .demo-viewport.mode-adhd {
+      background: #fffdf7;
+    }
+
+    .adhd-progress-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 5px;
+      width: 65%;
+      background: var(--coral);
+      border-radius: 0;
+    }
+
+    .adhd-timer-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--ink);
+      color: #fff;
+      padding: 7px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    .adhd-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--coral-l);
+      border: 2px solid var(--coral);
+      color: var(--coral);
+      font-size: 11px;
+      font-weight: 800;
+      padding: 5px 14px;
+      border-radius: 20px;
+      margin-bottom: 16px;
+    }
+
+    .adhd-headline {
+      font-size: 18px;
+      font-weight: 800;
+      font-family: var(--head);
+      margin-bottom: 14px;
+    }
+
+    .adhd-p {
+      font-size: 14px;
+      line-height: 1.85;
+      color: var(--ink2);
+      margin-bottom: 8px;
+    }
+
+    .adhd-p.focus-p {
+      background: var(--coral-l);
+      border: 2px solid var(--coral);
+      border-radius: 10px;
+      padding: 12px 16px;
+      color: var(--ink);
+      opacity: 1 !important;
+    }
+
+    .adhd-p.dimmed {
+      opacity: .18;
+    }
+
+    /* ── Autism Mode ── */
+    .demo-viewport.mode-autism {
+      background: #f8fffc;
+    }
+
+    .autism-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--teal-l);
+      border: 2px solid var(--teal);
+      color: var(--teal);
+      font-size: 11px;
+      font-weight: 800;
+      padding: 5px 14px;
+      border-radius: 20px;
+      margin-bottom: 14px;
+    }
+
+    .section-warn {
+      background: #fff8e1;
+      border: 2px solid #f4b400;
+      border-radius: 9px;
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #7a5900;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .autism-box {
+      background: var(--white);
+      border: 2px solid var(--teal);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+
+    .autism-box-head {
+      background: var(--teal-l);
+      padding: 8px 14px;
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--teal);
+    }
+
+    .autism-box-body {
+      padding: 12px 14px;
+      font-size: 14px;
+      color: var(--ink2);
+      line-height: 1.72;
+    }
+
+    .autism-literal {
+      background: var(--teal-l);
+      border: 1.5px solid var(--teal);
+      border-radius: 7px;
+      padding: 7px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--teal);
+      margin-top: 7px;
+    }
+
+    /* ── Low Literacy Mode ── */
+    .demo-viewport.mode-literacy {
+      background: #fdf8ff;
+    }
+
+    .lit-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--violet-l);
+      border: 2px solid var(--violet);
+      color: var(--violet);
+      font-size: 11px;
+      font-weight: 800;
+      padding: 5px 14px;
+      border-radius: 20px;
+      margin-bottom: 14px;
+    }
+
+    .lit-tts-bar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      background: var(--ink);
+      border-radius: 10px;
+      padding: 9px 14px;
+      margin-bottom: 18px;
+    }
+
+    .lit-tts-btn {
+      background: var(--violet);
+      color: #fff;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: default;
+    }
+
+    .lit-tts-txt {
+      font-size: 12px;
+      color: rgba(255, 255, 255, .65);
+    }
+
+    .lit-h {
+      font-size: 20px;
+      font-weight: 800;
+      font-family: var(--head);
+      margin-bottom: 12px;
+      color: var(--ink);
+    }
+
+    .lit-p {
+      font-size: 17px;
+      line-height: 2.0;
+      color: var(--ink);
+      margin-bottom: 10px;
+    }
+
+    /* ── Elderly Mode ── */
+    .demo-viewport.mode-elderly {
+      background: #fff;
+    }
+
+    .eld-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--rose-l);
+      border: 2px solid var(--rose);
+      color: var(--rose);
+      font-size: 11px;
+      font-weight: 800;
+      padding: 5px 14px;
+      border-radius: 20px;
+      margin-bottom: 14px;
+    }
+
+    .eld-h {
+      font-size: 26px;
+      font-weight: 800;
+      font-family: var(--head);
+      margin-bottom: 14px;
+      color: var(--ink);
+    }
+
+    .eld-p {
+      font-size: 19px;
+      line-height: 2.05;
+      color: var(--ink);
+      margin-bottom: 14px;
+    }
+
+    .eld-cta-wrap {
+      position: relative;
+      display: inline-block;
+      margin-top: 6px;
+    }
+
+    .eld-btn {
+      display: inline-block;
+      background: var(--rose);
+      color: #fff;
+      padding: 15px 26px;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: 800;
+      cursor: default;
+    }
+
+    .eld-tooltip {
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 0;
+      white-space: nowrap;
+      background: var(--ink);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 7px;
+    }
+
+    .eld-tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 20px;
+      border: 5px solid transparent;
+      border-top-color: var(--ink);
+    }
+
+    /* Description bar below browser */
+    .demo-desc-bar {
+      background: var(--white);
+      border: 2px solid var(--cream3);
+      border-radius: var(--r);
+      padding: 18px 22px;
+      margin-top: 14px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    .ddb-icon {
+      font-size: 26px;
+      flex-shrink: 0;
+    }
+
+    .ddb-title {
+      font-family: var(--head);
+      font-weight: 800;
+      font-size: 15px;
+      margin-bottom: 3px;
+    }
+
+    .ddb-body {
+      font-size: 14px;
+      color: var(--ink2);
+      line-height: 1.65;
+    }
+
+
+    /* ============================================================
+   §7  INSTALL
+============================================================ */
+    #install {
+      background: var(--ink);
+      position: relative;
+      overflow: hidden;
+    }
+
+    #install::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse 700px 600px at 20% 50%, rgba(14, 126, 111, .35) 0%, transparent 60%),
+        radial-gradient(ellipse 600px 600px at 85% 50%, rgba(94, 53, 177, .25) 0%, transparent 55%);
+    }
+
+    .install-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 72px;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    h2.inst-title {
+      font-family: var(--head);
+      font-weight: 800;
+      font-size: clamp(30px, 4vw, 50px);
+      line-height: 1.1;
+      letter-spacing: -.025em;
+      color: #fff;
+      margin-bottom: 16px;
+    }
+
+    h2.inst-title span {
+      color: #6ee7da;
+    }
+
+    .inst-sub {
+      font-size: clamp(15px, 1.5vw, 18px);
+      color: rgba(255, 255, 255, .65);
+      line-height: 1.85;
+      margin-bottom: 34px;
+      max-width: 460px;
+    }
+
+    .inst-btns {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 28px;
+    }
+
+    .inst-trust {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .it-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: rgba(255, 255, 255, .55);
+      font-weight: 700;
+    }
+
+    .it-item::before {
+      content: '✓';
+      color: #6ee7da;
+      font-weight: 900;
+    }
+
+    .install-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .inst-step {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      background: rgba(255, 255, 255, .06);
+      border: 1.5px solid rgba(255, 255, 255, .1);
+      border-radius: var(--r);
+      padding: 18px 20px;
+      transition: all .2s;
+    }
+
+    .inst-step:hover {
+      background: rgba(255, 255, 255, .1);
+      border-color: rgba(255, 255, 255, .2);
+    }
+
+    .is-n {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--teal);
+      font-family: var(--head);
+      font-weight: 800;
+      font-size: 15px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .is-b h4 {
+      font-family: var(--head);
+      font-weight: 800;
+      font-size: 14px;
+      color: #fff;
+      margin-bottom: 3px;
+    }
+
+    .is-b p {
+      font-size: 13px;
+      color: rgba(255, 255, 255, .55);
+      line-height: 1.55;
+    }
+
+
+    /* ============================================================
+   §8  TEAM
+============================================================ */
+    #team {
+      background: var(--cream);
+    }
+
+    .team-intro {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 22px;
+    }
+
+    .team-card {
+      background: var(--white);
+      border: 2px solid var(--cream3);
+      border-radius: var(--r2);
+      padding: 30px 22px;
+      text-align: center;
+      transition: all .25s;
+    }
+
+    .team-card:hover {
+      box-shadow: var(--sh2);
+      transform: translateY(-4px);
+      border-color: #bfb9b1;
+    }
+
+    .team-avatar {
+      width: 74px;
+      height: 74px;
+      border-radius: 50%;
+      margin: 0 auto 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      border: 3px solid var(--cream3);
+      background: var(--cream2);
+    }
+
+    .team-name {
+      font-family: var(--head);
+      font-weight: 800;
+      font-size: 15px;
+      color: var(--ink);
+      margin-bottom: 4px;
+    }
+
+    .team-role {
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .team-bio {
+      font-size: 13px;
+      color: var(--ink2);
+      line-height: 1.65;
+    }
+
+    .team-socials {
+      display: flex;
+      gap: 7px;
+      justify-content: center;
+      margin-top: 14px;
+    }
+
+    .team-social {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: var(--cream2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      text-decoration: none;
+      transition: background .15s;
+      color: var(--ink2);
+    }
+
+    .team-social:hover {
+      background: var(--teal-l);
+    }
+
+
+    /* ============================================================
+   FOOTER
+============================================================ */
+    footer {
+      background: var(--cream2);
+      border-top: 2px solid var(--cream3);
+      padding: 60px 0 28px;
+    }
+
+    .footer-top {
+      display: grid;
+      grid-template-columns: 1.8fr 1fr 1fr 1fr;
+      gap: 48px;
+      margin-bottom: 44px;
+    }
+
+    .f-brand {
+      font-family: var(--head);
+      font-weight: 800;
+      font-size: 18px;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 10px;
+    }
+
+    .f-mark {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--teal), var(--violet));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .f-tagline {
+      font-size: 14px;
+      color: var(--ink2);
+      line-height: 1.7;
+      max-width: 220px;
+    }
+
+    .f-col h4 {
+      font-family: var(--head);
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--ink);
+      margin-bottom: 14px;
+    }
+
+    .f-col ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .f-col ul a {
+      font-size: 14px;
+      color: var(--ink2);
+      text-decoration: none;
+      transition: color .15s;
+    }
+
+    .f-col ul a:hover {
+      color: var(--teal);
+    }
+
+    .footer-btm {
+      border-top: 2px solid var(--cream3);
+      padding-top: 22px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .f-copy {
+      font-size: 13px;
+      color: var(--ink3);
+    }
+
+    .f-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 2px solid var(--cream3);
+      color: var(--ink3);
+    }
+
+
+    /* ============================================================
+   RESPONSIVE
+============================================================ */
+    @media(max-width:1000px) {
+
+      #hero .wrap,
+      .install-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-popup-wrap {
+        display: none;
+      }
+
+      .sol-intro,
+      .how-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .modes-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .problem-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .problem-bottom {
+        grid-template-columns: 1fr;
+      }
+
+      .feat-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .team-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .footer-top {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media(max-width:640px) {
+
+      .nav-links,
+      .nav-cta {
+        display: none;
+      }
+
+      #mob-btn {
+        display: flex;
+      }
+
+      .problem-grid,
+      .feat-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .modes-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .team-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .footer-top {
+        grid-template-columns: 1fr;
+      }
+
+      .wrap {
+        padding: 0 18px;
+      }
+
+      .demo-tabs {
+        gap: 7px;
+      }
+
+      .d-tab {
+        padding: 8px 14px;
+        font-size: 13px;
+      }
+    }
+
+
+    /* ============================================================
+CALMER DEFAULT OVERRIDES FOR COGNITIVE ACCESSIBILITY
+============================================================ */
+    :root {
+      --body: 'Lexend', sans-serif;
+    }
+
+    body {
+      font-family: var(--body);
+    }
+
+    .rv {
+      opacity: 1 !important;
+      transform: none !important;
+      transition: none !important;
+    }
+
+    .hc-ring,
+    .hero-dot,
+    .popup-glow,
+    .ext-card,
+    h1.hero-h1 span::after,
+    .dys-ruler,
+    .adhd-progress-bar {
+      animation: none !important;
+    }
+
+    .mode-tile:hover,
+    .feat-card:hover,
+    .team-card:hover,
+    .card:hover,
+    .nav-cta:hover,
+    .btn:hover,
+    .ext-mode-btn:hover {
+      transform: none !important;
+      box-shadow: none !important;
+    }
+
+    .hero-popup-wrap {
+      display: none !important;
+    }
+
+    #hero .wrap {
+      grid-template-columns: 1fr !important;
+      gap: 24px !important;
+    }
+
+    .nav-text-grad {
+      background: none !important;
+      -webkit-text-fill-color: currentColor !important;
+      color: var(--ink) !important;
+    }
+
+    .hero-sub,
+    .s-sub,
+    .step-d,
+    .feat-d,
+    .prob-body,
+    .pq-text,
+    .ddb-body,
+    .inst-sub,
+    .team-bio,
+    .f-tagline {
+      max-width: 68ch;
+    }
+
+    #how .pipeline-vis {
+      position: static;
+    }
+
+    .hero-trust {
+      gap: 12px;
+    }
+
+    .hero-trust .trust-item,
+    .it-item,
+    .f-badge,
+    .mt-tag,
+    .chip {
+      font-size: 12px;
+    }
+
+    #demo .demo-browser,
+    #demo .demo-desc-bar {
+      max-width: 980px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    @media (max-width: 1000px) {
+      .hero-popup-wrap {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+
+<body class="no-anim">
+  <div aria-atomic="true" aria-live="polite" class="sr-only" id="aria-live"></div>
+  <!-- Skip links -->
+  <nav aria-label="Skip navigation" class="skip-nav">
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <a class="skip-link" href="#demo">Skip to demo</a>
+    <a class="skip-link" href="#install">Skip to install</a>
+  </nav>
+  <!-- ════════════════════════════════════════
+     ACCESSIBILITY TOOLBAR
+════════════════════════════════════════ -->
+  <!-- ════════════════════════════════════════
+     NAVIGATION
+════════════════════════════════════════ -->
+  <header>
+    <nav aria-label="Main navigation" id="nav">
+      <div class="nav-wrap">
+        <a aria-label="NeuroAccess home" class="nav-brand" href="#">
+          <div aria-hidden="true" class="nav-mark">
+            <!-- Brain + Key SVG Logo -->
+            <svg fill="none" viewbox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M49 20C42 16 33 18 28 25C24 30 24 37 27 42C23 44 20 49 20 55C20 62 25 68 31 69C31 75 37 80 44 80H50L53 95C54 98 58 100 61 99L68 97C71 96 73 92 72 89L68 62C76 56 81 48 80 38C79 26 69 16 57 16C54 16 51 17 49 20Z"
+                fill="url(#brainGrad)"></path>
+              <path d="M50 80L53 95M68 97L72 89L68 62" stroke="#2DD4BF" stroke-linecap="round" stroke-linejoin="round"
+                stroke-width="6"></path>
+              <path
+                d="M49 20C42 16 33 18 28 25C24 30 24 37 27 42C23 44 20 49 20 55C20 62 25 68 31 69C31 75 37 80 44 80H50M49 20C51 17 54 16 57 16C69 16 79 26 80 38C81 48 76 56 68 62"
+                stroke="#3B82F6" stroke-linecap="round" stroke-linejoin="round" stroke-width="6"></path>
+              <path d="M37 38C32 40 32 46 36 49C42 53 50 51 54 46" stroke="#3B82F6" stroke-linecap="round"
+                stroke-linejoin="round" stroke-width="6"></path>
+              <path d="M57 32C62 33 65 30 65 25" stroke="#3B82F6" stroke-linecap="round" stroke-linejoin="round"
+                stroke-width="6"></path>
+              <path d="M51 68C60 69 66 64 66 59" stroke="#3B82F6" stroke-linecap="round" stroke-linejoin="round"
+                stroke-width="6"></path>
+              <defs>
+                <lineargradient gradientunits="userSpaceOnUse" id="brainGrad" x1="20" x2="80" y1="16" y2="100">
+                  <stop offset="0%" stop-color="#EFF6FF"></stop>
+                  <stop offset="100%" stop-color="#E0F2FE"></stop>
+                </lineargradient>
+              </defs>
+            </svg>
+          </div>
+          NeuroAccess
+        </a>
+        <ul class="nav-links" role="list">
+          <li><a href="#problem"><span class="nav-text-grad">Why it helps</span></a></li>
+          <li><a href="#solution"><span class="nav-text-grad">Modes</span></a></li>
+          <li><a href="#how"><span class="nav-text-grad">How to use it</span></a></li>
+          <li><a href="#features"><span class="nav-text-grad">Features</span></a></li>
+          <li><a href="#demo"><span class="nav-text-grad">Demo</span></a></li>
+          <li><a href="#team"><span class="nav-text-grad">Team</span></a></li>
+          <li><a href="#install"><span class="nav-text-grad">Install</span></a></li>
+        </ul>
+        <button aria-controls="mob-nav" aria-expanded="false" aria-label="Open navigation" id="mob-btn">☰</button>
+        <a class="nav-cta" href="#install">Install free</a>
+      </div>
+    </nav>
+  </header>
+  <!-- Mobile nav -->
+  <div aria-label="Navigation menu" aria-modal="true" hidden="" id="mob-nav" role="dialog">
+    <button aria-label="Close menu" id="mob-close">✕</button>
+    <a class="mob-nav-link" href="#problem" onclick="closeMob()"><span class="nav-text-grad">Why it helps</span></a>
+    <a class="mob-nav-link" href="#solution" onclick="closeMob()"><span class="nav-text-grad">Modes</span></a>
+    <a class="mob-nav-link" href="#how" onclick="closeMob()"><span class="nav-text-grad">How to use it</span></a>
+    <a class="mob-nav-link" href="#features" onclick="closeMob()"><span class="nav-text-grad">Features</span></a>
+    <a class="mob-nav-link" href="#demo" onclick="closeMob()"><span class="nav-text-grad">Demo</span></a>
+    <a class="mob-nav-link" href="#team" onclick="closeMob()"><span class="nav-text-grad">Team</span></a>
+    <a class="mob-nav-link" href="#install" onclick="closeMob()"><span class="nav-text-grad">Install</span></a>
+    <a class="btn btn-teal" href="#install" onclick="closeMob()" style="margin-top:10px">Install Extension →</a>
+  </div>
+  <!-- ════════════════════════════════════════
+     MAIN
+════════════════════════════════════════ -->
+  <main id="main-content">
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━
+  § 1  HERO
+━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <section aria-labelledby="h1" id="hero">
+      <div aria-hidden="true" class="hero-circles">
+        <div class="hc-ring"></div>
+        <div class="hc-ring"></div>
+        <div class="hc-ring"></div>
+      </div>
+      <div class="wrap">
+        <!-- Left copy -->
+        <div>
+          <div class="hero-badge"><span aria-hidden="true" class="hero-dot"></span> Free browser add-on for easier
+            reading</div>
+          <h1 class="hero-h1" id="h1">A calmer,<br />clearer web<br /><span>for every brain</span></h1>
+          <p class="hero-sub">NeuroAccess changes a website so it is easier to read, easier to follow, and less
+            distracting for people with dyslexia, ADHD, autism, and other reading needs.</p>
+          <div class="hero-ctas">
+            <a class="btn btn-teal" href="#install">Install free</a>
+            <a class="btn btn-outline" href="#demo">See demo</a>
+          </div>
+          <div aria-label="Key facts" class="hero-trust" role="list">
+            <div class="trust-item" role="listitem"><svg aria-hidden="true" fill="none" height="15"
+                stroke="currentColor" stroke-width="2.5" viewbox="0 0 24 24" width="15">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg> Free to use</div>
+            <div class="trust-item" role="listitem"><svg aria-hidden="true" fill="none" height="15"
+                stroke="currentColor" stroke-width="2.5" viewbox="0 0 24 24" width="15">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg> Works on most websites</div>
+            <div class="trust-item" role="listitem"><svg aria-hidden="true" fill="none" height="15"
+                stroke="currentColor" stroke-width="2.5" viewbox="0 0 24 24" width="15">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg> Read aloud included</div>
+            <div class="trust-item" role="listitem"><svg aria-hidden="true" fill="none" height="15"
+                stroke="currentColor" stroke-width="2.5" viewbox="0 0 24 24" width="15">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg> Calm by default</div>
+            <div class="trust-item" role="listitem"><svg aria-hidden="true" fill="none" height="15"
+                stroke="currentColor" stroke-width="2.5" viewbox="0 0 24 24" width="15">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg> Private by design</div>
+          </div>
+        </div>
+        <!-- Right — extension popup -->
+        <div aria-hidden="true" class="hero-popup-wrap">
+          <div class="popup-glow"></div>
+          <div class="ext-card">
+            <div class="ext-topbar">
+              <div class="ext-brand">
+                <span class="ext-brand-dot"></span>
+                <span class="ext-brand-name">NeuroAccess</span>
+              </div>
+              <span class="ext-cog">⚙️</span>
+            </div>
+            <div class="ext-score-row">
+              <div class="score-ring">
+                <svg viewbox="0 0 62 62">
+                  <circle class="sr-track" cx="31" cy="31" fill="none" r="27" stroke-width="5"></circle>
+                  <circle class="sr-fill" cx="31" cy="31" fill="none" r="27" stroke-width="5"></circle>
+                </svg>
+                <div class="score-num">72</div>
+              </div>
+              <div>
+                <div class="score-chips">
+                  <span class="chip c-g">Contrast 88</span>
+                  <span class="chip c-y">Animation 48</span>
+                  <span class="chip c-g">Font 80</span>
+                  <span class="chip c-r">Layout 38</span>
+                  <span class="chip c-y">Reading 62</span>
+                </div>
+                <div class="score-lbl">Neurodiversity Score</div>
+              </div>
+            </div>
+            <div class="ext-modes-area">
+              <div class="ext-modes-lbl">Choose your mode</div>
+              <div class="ext-modes-grid" id="ext-modes-grid">
+                <div class="ext-mode-btn active-m" data-mi="0"><span class="ext-mi">📖</span><span>Dyslexia</span></div>
+                <div class="ext-mode-btn" data-mi="1"><span class="ext-mi">🎯</span><span>ADHD</span></div>
+                <div class="ext-mode-btn" data-mi="2"><span class="ext-mi">🗂️</span><span>Structured</span></div>
+                <div class="ext-mode-btn" data-mi="3"><span class="ext-mi">🔤</span><span>Low Literacy</span></div>
+                <div class="ext-mode-btn" data-mi="4"><span class="ext-mi">👴</span><span>Elderly</span></div>
+              </div>
+            </div>
+            <div class="ext-active-strip">
+              <span class="eas-txt" id="eas-label">📖 Dyslexia Mode ON</span>
+              <button aria-hidden="true" class="eas-off" tabindex="-1">✕ Off</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━
+  § 2  PROBLEM
+━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <section aria-labelledby="prob-h2" class="section alt" id="problem">
+      <div class="wrap">
+        <div class="eyebrow rv">The Problem</div>
+        <h2 class="s-title rv d1" id="prob-h2">Many websites are hard to read,<br /><b>hard to focus on, and hard to
+            trust</b></h2>
+        <p class="s-sub rv d2">People can struggle with long paragraphs, busy layouts, moving content, and unclear
+          words. This can make simple tasks feel stressful.</p>
+        <div class="problem-grid">
+          <div class="prob-card teal rv d1">
+            <div class="prob-stat">1 in 5</div>
+            <div class="prob-label">People may struggle with reading text</div>
+            <p class="prob-body">Crowded text, tight spacing, and hard words can make reading slower and more tiring.
+            </p>
+          </div>
+          <div class="prob-card coral rv d2">
+            <div class="prob-stat">1 in 10</div>
+            <div class="prob-label">People may struggle to stay focused</div>
+            <p class="prob-body">Pop-ups, sidebars, autoplay media, and too many choices can pull attention away from
+              the main task.</p>
+          </div>
+          <div class="prob-card violet rv d3">
+            <div class="prob-stat">54%</div>
+            <div class="prob-label">Many adults prefer simpler language</div>
+            <p class="prob-body">When websites use school-like or technical language, many people cannot quickly
+              understand what to do next.</p>
+          </div>
+        </div>
+        <div class="problem-bottom rv d2">
+          <div class="prob-quote">
+            <div aria-hidden="true" class="pq-mark">"</div>
+            <div>
+              <p class="pq-text">A website should help people finish a task, not make them decode the page first.</p>
+              <p class="pq-src">— NeuroAccess design goal</p>
+            </div>
+          </div>
+          <div class="prob-pain-card rv d3">
+            <p class="pp-title">Common problems people face online:</p>
+            <ul class="pp-list" role="list">
+              <li><span aria-hidden="true" class="pp-x">✕</span>Text is too small or packed too tightly</li>
+              <li><span aria-hidden="true" class="pp-x">✕</span>Motion or flashing pulls attention away</li>
+              <li><span aria-hidden="true" class="pp-x">✕</span>Words are too formal or too technical</li>
+              <li><span aria-hidden="true" class="pp-x">✕</span>Page sections feel busy or unpredictable</li>
+              <li><span aria-hidden="true" class="pp-x">✕</span>Buttons are too small or not obvious</li>
+              <li><span aria-hidden="true" class="pp-x">✕</span>There is no simple way to hear the page</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━
+  § 3  SOLUTION
+━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <section aria-labelledby="sol-h2" class="section" id="solution">
+      <div class="wrap">
+        <div class="sol-intro">
+          <div>
+            <div class="eyebrow rv">Our Solution</div>
+            <h2 class="s-title rv d1" id="sol-h2">Choose the view that helps you most.<br /><b>One tool, five clear
+                modes.</b></h2>
+            <p class="s-sub rv d2" style="margin-bottom:0">Instead of forcing everyone to use the same page, NeuroAccess
+              offers simple reading modes for different needs.</p>
+          </div>
+          <div class="rv d3" style="display:flex;flex-direction:column;gap:14px;justify-content:flex-end">
+            <div style="background:var(--teal-l);border:2px solid var(--teal);border-radius:var(--r);padding:16px 20px">
+              <p style="font-size:14px;font-weight:700;color:var(--teal);margin-bottom:4px">Helpful suggestion</p>
+              <p style="font-size:13px;color:var(--ink2);line-height:1.6">The tool can suggest a mode, so people do not
+                have to guess which setting might help.</p>
+            </div>
+            <div
+              style="background:var(--cream2);border:2px solid var(--cream3);border-radius:var(--r);padding:16px 20px">
+              <p style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:4px">Saves your choice</p>
+              <p style="font-size:13px;color:var(--ink2);line-height:1.6">Your reading mode can stay on for the sites
+                you use often.</p>
+            </div>
+          </div>
+        </div>
+        <div class="modes-grid" role="list">
+          <div class="mode-tile t rv" role="listitem">
+            <div aria-hidden="true" class="mt-icon">📖</div>
+            <h3 class="mt-name">Dyslexia Mode</h3>
+            <p class="mt-desc">More spacing, a reading-friendly font, and line help for easier reading</p>
+            <div class="mt-tags"><span class="mt-tag">OpenDyslexic</span><span class="mt-tag">Ruler</span><span
+                class="mt-tag">Highlights</span></div>
+          </div>
+          <div class="mode-tile co rv d1" role="listitem">
+            <div aria-hidden="true" class="mt-icon">🎯</div>
+            <h3 class="mt-name">ADHD Mode</h3>
+            <p class="mt-desc">Removes clutter and helps you focus on one part at a time</p>
+            <div class="mt-tags"><span class="mt-tag">Ad block</span><span class="mt-tag">Focus tunnel</span><span
+                class="mt-tag">Timer</span></div>
+          </div>
+          <div class="mode-tile vi rv d2" role="listitem">
+            <div aria-hidden="true" class="mt-icon">🗂️</div>
+            <h3 class="mt-name">Autism Mode</h3>
+            <p class="mt-desc">Uses a steady layout, clear labels, and more literal wording</p>
+            <div class="mt-tags"><span class="mt-tag">AI rewrite</span><span class="mt-tag">Section labels</span><span
+                class="mt-tag">No surprises</span></div>
+          </div>
+          <div class="mode-tile sk rv d3" role="listitem">
+            <div aria-hidden="true" class="mt-icon">🔤</div>
+            <h3 class="mt-name">Low Literacy</h3>
+            <p class="mt-desc">Changes hard wording into simpler words and supports read aloud</p>
+            <div class="mt-tags"><span class="mt-tag">AI simplify</span><span class="mt-tag">TTS</span><span
+                class="mt-tag">Grade 3</span></div>
+          </div>
+          <div class="mode-tile ro rv d4" role="listitem">
+            <div aria-hidden="true" class="mt-icon">👴</div>
+            <h3 class="mt-name">Elderly Mode</h3>
+            <p class="mt-desc">Uses bigger text, bigger buttons, and fewer moving parts</p>
+            <div class="mt-tags"><span class="mt-tag">20px+ text</span><span class="mt-tag">Big buttons</span><span
+                class="mt-tag">Tooltips</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━
+  § 4  HOW IT WORKS
+━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <section aria-labelledby="how-h2" class="section alt" id="how">
+      <div class="wrap">
+        <div class="eyebrow rv">How It Works</div>
+        <h2 class="s-title rv d1" id="how-h2">Simple steps, <b>clear results</b></h2>
+        <div class="how-grid">
+          <ol aria-label="How NeuroAccess transforms a page" class="steps rv d2">
+            <li class="step">
+              <div aria-hidden="true" class="step-num">1</div>
+              <div>
+                <h3 class="step-t">Open any page</h3>
+                <p class="step-d">Go to the website you want to read.</p>
+              </div>
+            </li>
+            <li class="step">
+              <div aria-hidden="true" class="step-num">2</div>
+              <div>
+                <h3 class="step-t">Open NeuroAccess</h3>
+                <p class="step-d">Click the add-on button and choose the view that feels easiest for you.</p>
+              </div>
+            </li>
+            <li class="step">
+              <div aria-hidden="true" class="step-num">3</div>
+              <div>
+                <h3 class="step-t">The page becomes easier</h3>
+                <p class="step-d">Text, spacing, layout, and language change to match your chosen mode.</p>
+              </div>
+            </li>
+            <li class="step">
+              <div aria-hidden="true" class="step-num">4</div>
+              <div>
+                <h3 class="step-t">Your settings stay helpful</h3>
+                <p class="step-d">If more content appears on the page, NeuroAccess keeps applying your chosen view.</p>
+              </div>
+            </li>
+          </ol>
+          <div aria-label="Transformation pipeline" class="pipeline-vis rv d3" role="region">
+            <div class="pv-head">Simple process</div>
+            <div class="pv-row done" id="pv0"><span aria-hidden="true" class="pv-icon">📄</span><span class="pv-t">Open
+                page</span></div>
+            <div aria-hidden="true" class="pv-arr">↓</div>
+            <div class="pv-row active" id="pv1"><span aria-hidden="true" class="pv-icon">🔍</span><span
+                class="pv-t">Check readability</span></div>
+            <div aria-hidden="true" class="pv-arr">↓</div>
+            <div class="pv-row" id="pv2"><span aria-hidden="true" class="pv-icon">📊</span><span class="pv-t">Show
+                helpful options</span></div>
+            <div aria-hidden="true" class="pv-arr">↓</div>
+            <div class="pv-row" id="pv3"><span aria-hidden="true" class="pv-icon">🎛️</span><span class="pv-t">Choose a
+                mode</span></div>
+            <div aria-hidden="true" class="pv-arr">↓</div>
+            <div class="pv-row" id="pv4"><span aria-hidden="true" class="pv-icon">🎨</span><span class="pv-t">Make the
+                page clearer</span></div>
+            <div aria-hidden="true" class="pv-arr">↓</div>
+            <div class="pv-row" id="pv5"><span aria-hidden="true" class="pv-icon">🤖</span><span class="pv-t">Simplify
+                hard text</span></div>
+            <div aria-hidden="true" class="pv-arr">↓</div>
+            <div class="pv-row" id="pv6"><span aria-hidden="true" class="pv-icon">✏️</span><span class="pv-t">Update the
+                page</span></div>
+            <div aria-hidden="true" class="pv-arr">↓</div>
+            <div class="pv-row" id="pv7"><span aria-hidden="true" class="pv-icon">👁️</span><span class="pv-t">Keep
+                changes on new content</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━
+  § 5  FEATURES
+━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <section aria-labelledby="feat-h2" class="section" id="features">
+      <div class="wrap">
+        <div class="eyebrow rv">Features</div>
+        <h2 class="s-title rv d1" id="feat-h2">Useful help for reading and focus.<br /><b>No extra clutter.</b></h2>
+        <p class="s-sub rv d2">These features are designed to lower stress, reduce distraction, and make websites easier
+          to understand.</p>
+        <div class="feat-grid">
+          <div class="feat-card rv">
+            <div aria-hidden="true" class="feat-icon" style="background:var(--sky-l)">🅰️</div>
+            <h3 class="feat-t">Reading-Friendly Fonts</h3>
+            <p class="feat-d">Use a clearer font and more comfortable spacing for reading.</p>
+          </div>
+          <div class="feat-card rv d1">
+            <div aria-hidden="true" class="feat-icon" style="background:var(--coral-l)">🎯</div>
+            <h3 class="feat-t">Distraction Reduction</h3>
+            <p class="feat-d">Hide sidebars, pop-ups, and other parts that pull attention away from the main text.</p>
+          </div>
+          <div class="feat-card rv d2">
+            <div aria-hidden="true" class="feat-icon" style="background:var(--teal-l)">🤖</div>
+            <h3 class="feat-t">Plain Language Help</h3>
+            <p class="feat-d">Turn harder wording into simpler, more direct sentences.</p>
+          </div>
+          <div class="feat-card rv d3">
+            <div aria-hidden="true" class="feat-icon" style="background:var(--violet-l)">🔊</div>
+            <h3 class="feat-t">Read Aloud</h3>
+            <p class="feat-d">Hear the page instead of reading every word yourself.</p>
+          </div>
+          <div class="feat-card rv">
+            <div aria-hidden="true" class="feat-icon" style="background:var(--rose-l)">📊</div>
+            <h3 class="feat-t">Page Help Score</h3>
+            <p class="feat-d">Get a simple view of whether a page may be easy or hard to use.</p>
+          </div>
+          <div class="feat-card rv d1">
+            <div aria-hidden="true" class="feat-icon" style="background:#e5f3e0">🔒</div>
+            <h3 class="feat-t">Privacy First</h3>
+            <p class="feat-d">You do not need an account, and your settings are kept simple and private.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━
+  § 6  DEMO
+━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <section aria-labelledby="demo-h2" class="section alt" id="demo">
+      <div class="wrap">
+        <div class="demo-header">
+          <div class="eyebrow rv" style="justify-content:center">Live Demo</div>
+          <h2 class="s-title rv d1" id="demo-h2">See a webpage become <b>clearer and calmer</b></h2>
+          <p class="s-sub center rv d2">Choose a mode to see how a busy page can become easier to read and follow.</p>
+        </div>
+        <!-- Mode picker -->
+        <div aria-label="Select a demo mode" class="demo-tabs rv d2" role="tablist">
+          <button aria-controls="demo-panel" aria-selected="false" class="d-tab" data-mode="original" id="dtab-original"
+            role="tab">Original</button>
+          <button aria-controls="demo-panel" aria-selected="false" class="d-tab" data-mode="dyslexia" id="dtab-dyslexia"
+            role="tab">Dyslexia</button>
+          <button aria-controls="demo-panel" aria-selected="false" class="d-tab" data-mode="adhd" id="dtab-adhd"
+            role="tab">ADHD focus</button>
+          <button aria-controls="demo-panel" aria-selected="true" class="d-tab on" data-mode="autism" id="dtab-autism"
+            role="tab">Structured</button>
+          <button aria-controls="demo-panel" aria-selected="false" class="d-tab" data-mode="literacy" id="dtab-literacy"
+            role="tab">Simple words</button>
+          <button aria-controls="demo-panel" aria-selected="false" class="d-tab" data-mode="elderly" id="dtab-elderly"
+            role="tab">Large text</button>
+        </div>
+        <!-- Browser frame -->
+        <div class="demo-browser rv d3">
+          <div class="browser-bar">
+            <div aria-hidden="true" class="b-dots">
+              <div class="b-dot b-dot-r"></div>
+              <div class="b-dot b-dot-y"></div>
+              <div class="b-dot b-dot-g"></div>
+            </div>
+            <div class="b-url">
+              <span aria-hidden="true">🔒</span>
+              <span id="b-url-text">www.sample-news-article.com</span>
+            </div>
+            <div aria-hidden="true" class="b-ext">
+              <span>🧠</span>
+              <span id="b-ext-label">Structured</span>
+            </div>
+          </div>
+          <div aria-live="polite" class="demo-viewport mode-autism" id="demo-panel" role="tabpanel">
+            <!-- Content is injected by JS per mode -->
+          </div>
+        </div>
+        <!-- Description bar -->
+        <div class="demo-desc-bar rv d4" id="demo-desc">
+          <span aria-hidden="true" class="ddb-icon" id="ddb-icon">🗂️</span>
+          <div>
+            <div class="ddb-title" id="ddb-title">Structured Mode Active</div>
+            <p class="ddb-body" id="ddb-body">This view uses clear labels, a steady layout, and more literal language so
+              the page feels easier to follow.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━
+  § 7  INSTALL EXTENSION
+━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <section aria-labelledby="inst-h2" class="section dark" id="install">
+      <div class="wrap">
+        <div class="install-grid">
+          <!-- Left -->
+          <div>
+            <div class="eyebrow rv" style="color:#6ee7da">Install Extension</div>
+            <h2 class="inst-title rv d1" id="inst-h2">Start using it<br /><span>in a few quick steps</span></h2>
+            <p class="inst-sub rv d2">Install the add-on, open any website, and switch to the view that helps you read
+              best.</p>
+            <div class="inst-btns rv d3">
+              <a class="btn btn-white" href="#">Add to Chrome</a>
+              <a class="btn btn-ghost-w" href="#">Firefox add-on</a>
+            </div>
+            <div aria-label="Installation assurances" class="inst-trust rv d4" role="list">
+              <span class="it-item" role="listitem">Free forever</span>
+              <span class="it-item" role="listitem">Open source</span>
+              <span class="it-item" role="listitem">Privacy first</span>
+            </div>
+          </div>
+          <!-- Right: steps -->
+          <div class="install-steps rv d2">
+            <div class="inst-step">
+              <div aria-hidden="true" class="is-n">1</div>
+              <div class="is-b">
+                <h4>Open the store page</h4>
+                <p>Choose your browser and add NeuroAccess.</p>
+              </div>
+            </div>
+            <div class="inst-step">
+              <div aria-hidden="true" class="is-n">2</div>
+              <div class="is-b">
+                <h4>Visit a website</h4>
+                <p>Open any page that feels hard to read or too busy.</p>
+              </div>
+            </div>
+            <div class="inst-step">
+              <div aria-hidden="true" class="is-n">3</div>
+              <div class="is-b">
+                <h4>Pick a helpful mode</h4>
+                <p>Choose the reading view that works best for you.</p>
+              </div>
+            </div>
+            <div class="inst-step">
+              <div aria-hidden="true" class="is-n">4</div>
+              <div class="is-b">
+                <h4>Keep reading</h4>
+                <p>The page changes right away so you can focus on the content.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━
+  § 8  TEAM
+━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <section aria-labelledby="team-h2" class="section" id="team">
+      <div class="wrap">
+        <div class="team-intro">
+          <div class="eyebrow rv" style="justify-content:center">The Team</div>
+          <h2 class="s-title rv d1" id="team-h2">Built by a team that <b>cares about inclusion</b></h2>
+          <p class="s-sub center rv d2">This project was made by students who want websites to feel easier and fairer
+            for more people.</p>
+        </div>
+        <div class="team-grid">
+          <div class="team-card rv">
+            <div aria-label="Ayushmaan's avatar" class="team-avatar" style="border-color:var(--teal-l)">🧑‍💼</div>
+            <div class="team-name">Ayushmaan Goyal</div>
+            <p class="team-bio">Student working on inclusive technology and clearer online experiences.</p>
+            <div class="team-socials">
+              <a aria-label="Ayushmaan on GitHub" class="team-social" href="https://github.com/mecyz"
+                target="_blank">🐙</a>
+              <a aria-label="Ayushmaan on LinkedIn" class="team-social"
+                href="https://www.linkedin.com/in/ayushmaan-goyal-771241314" target="_blank">💼</a>
+            </div>
+          </div>
+          <div class="team-card rv d1">
+            <div aria-label="Anushka's avatar" class="team-avatar" style="border-color:var(--violet-l)">👩‍🎨</div>
+            <div class="team-name">Anushka Kavle</div>
+            <p class="team-bio">Student designer focused on calm, thoughtful, and accessible interfaces.</p>
+            <div class="team-socials">
+              <a aria-label="Anushka on GitHub" class="team-social" href="https://github.com/anushkakavle10"
+                target="_blank">🐙</a>
+              <a aria-label="Anushka on LinkedIn" class="team-social"
+                href="https://www.linkedin.com/in/ayushmaan-goyal-771241314" target="_blank">💼</a>
+            </div>
+          </div>
+          <div class="team-card rv d2">
+            <div aria-label="Aryan's avatar" class="team-avatar" style="border-color:var(--teal-l)">👨‍💻</div>
+            <div class="team-name">Aryan Rane</div>
+            <p class="team-bio">Student builder helping create a reliable and easy-to-use tool.</p>
+            <div class="team-socials">
+              <a aria-label="Aryan on GitHub" class="team-social" href="https://github.com/dreameterftw"
+                target="_blank">🐙</a>
+              <a aria-label="Aryan on LinkedIn" class="team-social"
+                href="https://www.linkedin.com/in/aryan-rane-order66/" target="_blank">💼</a>
+            </div>
+          </div>
+          <div class="team-card rv d3">
+            <div aria-label="Samarth's avatar" class="team-avatar" style="border-color:var(--coral-l)">👨‍🎓</div>
+            <div class="team-name">Samarth Goyal</div>
+            <p class="team-bio">Student researcher supporting the evidence behind the design choices.</p>
+            <div class="team-socials">
+              <a aria-label="Samarth on GitHub" class="team-social" href="https://github.com/samarthngoyal"
+                target="_blank">🐙</a>
+              <a aria-label="Samarth on LinkedIn" class="team-social" href="https://www.linkedin.com/in/samarth-n-goyal"
+                target="_blank">💼</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main><!-- /main -->
+  <!-- FOOTER -->
+  <footer>
+    <div class="wrap">
+      <div class="footer-top">
+        <div>
+          <div class="f-brand">
+            <div aria-hidden="true" class="nav-mark" style="width:34px;height:34px;margin-right:0;">
+              <svg fill="none" viewbox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <path
+                  d="M49 20C42 16 33 18 28 25C24 30 24 37 27 42C23 44 20 49 20 55C20 62 25 68 31 69C31 75 37 80 44 80H50L53 95C54 98 58 100 61 99L68 97C71 96 73 92 72 89L68 62C76 56 81 48 80 38C79 26 69 16 57 16C54 16 51 17 49 20Z"
+                  fill="url(#fBrainGrad)"></path>
+                <path d="M50 80L53 95M68 97L72 89L68 62" stroke="#2DD4BF" stroke-linecap="round" stroke-linejoin="round"
+                  stroke-width="6"></path>
+                <path
+                  d="M49 20C42 16 33 18 28 25C24 30 24 37 27 42C23 44 20 49 20 55C20 62 25 68 31 69C31 75 37 80 44 80H50M49 20C51 17 54 16 57 16C69 16 79 26 80 38C81 48 76 56 68 62"
+                  stroke="#3B82F6" stroke-linecap="round" stroke-linejoin="round" stroke-width="6"></path>
+                <path d="M37 38C32 40 32 46 36 49C42 53 50 51 54 46" stroke="#3B82F6" stroke-linecap="round"
+                  stroke-linejoin="round" stroke-width="6"></path>
+                <path d="M57 32C62 33 65 30 65 25" stroke="#3B82F6" stroke-linecap="round" stroke-linejoin="round"
+                  stroke-width="6"></path>
+                <path d="M51 68C60 69 66 64 66 59" stroke="#3B82F6" stroke-linecap="round" stroke-linejoin="round"
+                  stroke-width="6"></path>
+                <defs>
+                  <lineargradient gradientunits="userSpaceOnUse" id="fBrainGrad" x1="20" x2="80" y1="16" y2="100">
+                    <stop offset="0%" stop-color="#EFF6FF"></stop>
+                    <stop offset="100%" stop-color="#E0F2FE"></stop>
+                  </lineargradient>
+                </defs>
+              </svg>
+            </div>
+            NeuroAccess
+          </div>
+          <p class="f-tagline">Making websites easier to read and use.</p>
+        </div>
+        <div class="f-col">
+          <h4>Download</h4>
+          <ul role="list">
+            <li><a href="#">Chrome Web Store</a></li>
+            <li><a href="#">Firefox Add-ons</a></li>
+            <li><a href="#">Edge Add-ons</a></li>
+            <li><a href="#">Release Notes</a></li>
+          </ul>
+        </div>
+        <div class="f-col">
+          <h4>Support</h4>
+          <ul role="list">
+            <li><a href="#">Documentation</a></li>
+            <li><a href="#">FAQ</a></li>
+            <li><a href="#">Report a Bug</a></li>
+            <li><a href="#">Contact</a></li>
+          </ul>
+        </div>
+        <div class="f-col">
+          <h4>Project</h4>
+          <ul role="list">
+            <li><a href="#">GitHub</a></li>
+            <li><a href="#">Privacy Policy</a></li>
+            <li><a href="#">Accessibility</a></li>
+            <li><a href="#">Blog</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-btm">
+        <p class="f-copy">© 2025 NeuroAccess · Open source · Built to support clearer reading</p>
+        <div aria-label="Compliance" role="list" style="display:flex;gap:8px">
+          <span class="f-badge" role="listitem">WCAG 2.1 AA</span>
+          <span class="f-badge" role="listitem">GDPR</span>
+          <span class="f-badge" role="listitem">No Tracking</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+  <!-- ════════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════════ -->
+  <script>
+    'use strict';
+
+    /* ── utils ── */
+    const $ = id => document.getElementById(id);
+    const motionOK = false;
+    function announce(msg) { const el = $('aria-live'); el.textContent = ''; setTimeout(() => el.textContent = msg, 50); }
+
+    /* ── Nav scroll ── */
+    window.addEventListener('scroll', () => $('nav').classList.toggle('scrolled', scrollY > 30), { passive: true });
+
+    /* ── Mobile nav ── */
+    const mobBtn = $('mob-btn'), mobNav = $('mob-nav'), mobClose = $('mob-close');
+    function openMob() { mobNav.hidden = false; mobNav.classList.add('open'); mobBtn.setAttribute('aria-expanded', 'true'); mobClose.focus(); document.body.style.overflow = 'hidden'; }
+    function closeMob() { mobNav.hidden = true; mobNav.classList.remove('open'); mobBtn.setAttribute('aria-expanded', 'false'); mobBtn.focus(); document.body.style.overflow = ''; }
+    mobBtn.addEventListener('click', openMob);
+    mobClose.addEventListener('click', closeMob);
+    mobNav.addEventListener('keydown', e => { if (e.key === 'Escape') closeMob(); });
+    mobNav.addEventListener('keydown', e => {
+      if (e.key !== 'Tab') return;
+      const items = [...mobNav.querySelectorAll('a,button')];
+      if (e.shiftKey && document.activeElement === items[0]) { e.preventDefault(); items[items.length - 1].focus(); }
+      else if (!e.shiftKey && document.activeElement === items[items.length - 1]) { e.preventDefault(); items[0].focus(); }
+    });
+
+    /* ── Scrollspy for Nav Emoji ── */
+    const navSections = Array.from(document.querySelectorAll('.nav-links a, .mob-nav-link'))
+      .map(link => document.querySelector(link.getAttribute('href')))
+      .filter(Boolean);
+
+    function updateNav() {
+      let currentSectionId = '';
+      for (const section of navSections) {
+        const rect = section.getBoundingClientRect();
+        if (rect.top <= window.innerHeight / 2 && rect.bottom >= window.innerHeight / 2) {
+          currentSectionId = section.id;
+          break;
+        }
+      }
+      if (window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 50) {
+        currentSectionId = 'install';
+      }
+
+      document.querySelectorAll('.nav-links a, .mob-nav-link').forEach(link => {
+        let emojiSpan = link.querySelector('.nav-emoji');
+        if (!emojiSpan) {
+          emojiSpan = document.createElement('span');
+          emojiSpan.className = 'nav-emoji';
+          link.appendChild(emojiSpan);
+        }
+
+        if (link.getAttribute('href') === '#' + currentSectionId) {
+          emojiSpan.textContent = ' ✨';
+        } else {
+          emojiSpan.textContent = '';
+        }
+      });
+    }
+    window.addEventListener('scroll', updateNav, { passive: true });
+    updateNav();
+
+    /* ── Scroll reveal ── */
+    new IntersectionObserver(entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('vis'); }), { threshold: .08 })
+      .observe.bind(new IntersectionObserver(entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('vis'); }), { threshold: .08 }));
+    (() => {
+      const obs = new IntersectionObserver(entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('vis'); }), { threshold: .08 });
+      document.querySelectorAll('.rv').forEach(el => obs.observe(el));
+    })();
+
+    /* ── Pipeline animation ── */
+    const pvRows = document.querySelectorAll('[id^="pv"]');
+    let pvIdx = 1;
+    function stepPipeline() {
+      pvRows.forEach((r, i) => { r.classList.remove('active', 'done'); if (i < pvIdx) r.classList.add('done'); else if (i === pvIdx) r.classList.add('active'); });
+    }
+    stepPipeline();
+    if (motionOK) { setInterval(() => { pvIdx = (pvIdx + 1) % pvRows.length; stepPipeline(); }, 1700); }
+
+    /* ── Ext popup cycling ── */
+    const extModes = [
+      { label: '📖 Dyslexia Mode ON', idx: 0 },
+      { label: '🎯 ADHD Mode ON', idx: 1 },
+      { label: '🗂️ Structured Mode ON', idx: 2 },
+      { label: '🔤 Low Literacy ON', idx: 3 },
+      { label: '👴 Elderly Mode ON', idx: 4 },
+    ];
+    const extBtns = document.querySelectorAll('.ext-mode-btn');
+    let extIdx = 0;
+    if (motionOK) {
+      setInterval(() => {
+        extBtns.forEach(b => b.classList.remove('active-m'));
+        extIdx = (extIdx + 1) % extBtns.length;
+        extBtns[extIdx].classList.add('active-m');
+        $('eas-label').textContent = extModes[extIdx].label;
+      }, 2400);
+    }
+
+
+
+    /* ══════════════════════════════════
+       DEMO SECTION
+    ══════════════════════════════════ */
+    const DEMO_HTML = {
+
+      original: `
+<div class="orig-paper-header">
+  <span class="orig-paper-name">📰 The Daily Tribune</span>
+  <div class="orig-paper-nav"><span>World</span><span>Politics</span><span>Tech</span><span>Sport</span><span>Opinion</span></div>
+</div>
+<div class="orig-article-layout">
+  <div>
+    <h2 class="orig-headline">Scientists Unveil Unprecedented Breakthrough in Renewable Energy Infrastructure</h2>
+    <div class="orig-byline">By James Whitmore · Science Correspondent · 14 March 2025</div>
+    <img src="https://images.unsplash.com/photo-1509391366360-2e959784a276?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="Solar panels in a field" style="width:100%; height:180px; object-fit:cover; border-radius:8px; margin-bottom:14px;">
+    <div class="orig-body">
+      <p>The ramifications of this unprecedented scientific breakthrough are multifaceted, encompassing not merely the technological domain but permeating the broader socioeconomic fabric of contemporary civilisation.</p>
+      <p>Preliminary assessments corroborate the hypothesis that photovoltaic efficiency has been augmented by approximately 40%, potentially rendering fossil fuel dependency obsolete within the ensuing decade if adequate legislative frameworks are concurrently implemented.</p>
+    </div>
+  </div>
+  <div class="orig-sidebar-area">
+    <div class="orig-ad-box"><div class="ad-lbl">Advertisement</div><p>Compare mortgage rates NOW! Limited deals expire Friday!</p></div>
+    <div class="orig-trending"><h4>Trending Now</h4><a href="#">5 things experts say about...</a><a href="#">BREAKING: Government to announce...</a><a href="#">Why this changes everything...</a></div>
+  </div>
+</div>`,
+
+      dyslexia: `
+<div class="dys-ruler" aria-hidden="true"></div>
+<div class="dys-badge">📖 Dyslexia Mode — Clear Font · More Spacing</div>
+<h2 style="font-family:Lexend,sans-serif;font-size:19px;font-weight:800;letter-spacing:.05em;margin-bottom:14px;color:var(--ink)">Scientists Find New Way to Make Clean Power</h2>
+<img src="https://images.unsplash.com/photo-1509391366360-2e959784a276?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="Solar panels in a field" style="width:100%; height:180px; object-fit:cover; border-radius:8px; margin-bottom:14px; filter: contrast(1.1) brightness(0.95); border: 2px solid var(--sky);">
+<p class="dys-p hl">This is big news for science. Researchers found a better way to get power from the sun.</p>
+<p class="dys-p">The new solar panels work much better than old ones. They can make 40% more power from the same amount of sunlight.</p>
+<p class="dys-p hl">If this keeps going, we might not need as much oil and gas in about ten years.</p>
+<div style="margin-top:16px;padding:10px 12px;background:rgba(26,107,181,.08);border-radius:8px;font-size:12px;color:var(--sky);font-weight:700">✓ Sidebar removed · ✓ Font changed to Lexend · ✓ Line spacing 2.2x · ✓ Alternating highlight</div>`,
+
+      adhd: `
+<div class="adhd-progress-bar" aria-hidden="true"></div>
+<div style="padding-top:10px">
+  <div class="adhd-timer-pill" aria-label="Pomodoro timer: 23 minutes 45 seconds remaining">🍅 23:45 remaining — keep going!</div>
+  <div class="adhd-badge">🎯 ADHD Focus Mode — Fewer Distractions</div>
+  <h2 class="adhd-headline">Scientists Find New Way to Make Clean Power</h2>
+  <img src="https://images.unsplash.com/photo-1509391366360-2e959784a276?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="Solar panels in a field" style="width:100%; height:180px; object-fit:cover; border-radius:8px; margin-bottom:14px; filter: grayscale(1) opacity(0.3); transition: all 0.3s;" >
+  <p class="adhd-p dimmed">Researchers at MIT have announced a major breakthrough in solar technology that could transform how the world generates electricity...</p>
+  <p class="adhd-p focus-p">The new solar panels work about <strong>40% better</strong> than existing ones. If this improvement holds up at scale, experts say we could rely significantly less on fossil fuels within the next decade.</p>
+  <p class="adhd-p dimmed">Dr. Chen, the lead researcher, said the team was surprised by how quickly the efficiency gains appeared during testing...</p>
+  <div style="margin-top:14px;padding:10px 12px;background:rgba(212,80,10,.08);border-radius:8px;font-size:12px;color:var(--coral);font-weight:700">✓ Ads removed · ✓ Progress bar added · ✓ Focus tunnel on · ✓ Pomodoro timer running</div>
+</div>`,
+
+      autism: `
+<div class="autism-badge">🗂️ Structured Mode — Clear Layout · Literal Language</div>
+<div class="section-warn">📌 <span>New section starting: <strong>Scientific Discovery</strong> — 2 sections total</span></div>
+<img src="https://images.unsplash.com/photo-1509391366360-2e959784a276?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="A field covered with many blue solar panels facing the sun." style="width:100%; height:180px; object-fit:cover; border-radius:8px; margin-bottom:14px; border: 3px solid var(--teal);">
+<div class="autism-box">
+  <div class="autism-box-head">📄 Section 1 of 2 — What They Found</div>
+  <div class="autism-box-body">
+    <p>Original text: <em>"This could be a game changer for the energy sector."</em></p>
+    <div class="autism-literal">✅ Plain meaning: This discovery might change how the world gets its electricity in an important way.</div>
+  </div>
+</div>
+<div class="section-warn">📌 <span>New section coming: <strong>What It Means for the Future</strong></span></div>
+<div class="autism-box">
+  <div class="autism-box-head">📄 Section 2 of 2 — What Happens Next</div>
+  <div class="autism-box-body">
+    <p>Original text: <em>"Scientists are over the moon about the implications."</em></p>
+    <div class="autism-literal">✅ Plain meaning: The scientists are very happy and excited about what this discovery means.</div>
+  </div>
+</div>`,
+
+      literacy: `
+<div class="lit-tts-bar">
+  <button class="lit-tts-btn" aria-label="Play text to speech" tabindex="-1">▶ Read Aloud</button>
+  <span class="lit-tts-txt">🔊 30+ languages available</span>
+</div>
+<div class="lit-badge">🔤 Simple Words Mode — Easier Language · Read Aloud</div>
+<h2 class="lit-h">Big News About Solar Power!</h2>
+<img src="https://images.unsplash.com/photo-1509391366360-2e959784a276?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="Picture of sunny solar panels" style="width:100%; height:180px; object-fit:cover; border-radius:8px; margin-bottom:14px;">
+<p class="lit-p">Some very smart people found a new way to make power from the sun. This is really good news for our world.</p>
+<p class="lit-p">The new sun panels make much more power than old ones. In a few years, we might not need as much oil and gas.</p>
+<div style="margin-top:14px;padding:10px 12px;background:rgba(94,53,177,.08);border-radius:8px;font-size:12px;color:var(--violet);font-weight:700">✓ Text simplified to Grade 3 · ✓ Font 17px · ✓ Sidebar removed · ✓ TTS ready</div>`,
+
+      elderly: `
+<div class="eld-badge">👴 Large Text Mode — Bigger Text · Bigger Buttons</div>
+<h2 class="eld-h">Scientists Find Better Solar Power</h2>
+<img src="https://images.unsplash.com/photo-1509391366360-2e959784a276?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="Solar panels in a field helping power the city" style="width:100%; height:220px; object-fit:cover; border-radius:12px; margin-bottom:18px; border: 4px solid #ddd;">
+<p class="eld-p">Scientists have found a new way to get much more power from the sun. This is very good news for the planet and could change how we all get our electricity.</p>
+<p class="eld-p">The new solar panels are about 40% percent better than old ones. Experts think we may need less oil and gas in the future because of this.</p>
+<div class="eld-cta-wrap">
+  <div class="eld-btn">Read Full Article</div>
+  <div class="eld-tooltip">Click here to open the complete news story</div>
+</div>
+<div style="margin-top:16px;padding:10px 12px;background:rgba(181,22,46,.08);border-radius:8px;font-size:12px;color:var(--rose);font-weight:700">✓ Font 19px · ✓ Ads removed · ✓ No animations · ✓ Tooltips on all buttons</div>`
+
+    };
+
+    const DEMO_META = {
+      original: { icon: '🌐', color: 'var(--ink)', title: 'Original Page', desc: 'This is a busy page with hard words, extra side content, and dense text.' },
+      dyslexia: { icon: '📖', color: 'var(--sky)', title: 'Dyslexia Mode Active', desc: 'This view uses a clearer font, more spacing, and a simpler reading layout.' },
+      adhd: { icon: '🎯', color: 'var(--coral)', title: 'ADHD Focus Mode Active', desc: 'This view removes distractions and helps you focus on one part at a time.' },
+      autism: { icon: '🗂️', color: 'var(--teal)', title: 'Structured Mode Active', desc: 'This view uses a steady layout, clear labels, and more literal wording.' },
+      literacy: { icon: '🔤', color: 'var(--violet)', title: 'Low Literacy Mode Active', desc: 'This view changes harder words into simpler language and supports read aloud.' },
+      elderly: { icon: '👴', color: 'var(--rose)', title: 'Elderly Mode Active', desc: 'This view uses larger text, larger buttons, and a calmer layout.' },
+    };
+
+    const viewport = $('demo-panel');
+    let activeMode = 'autism';
+
+    // Render initial content
+    viewport.innerHTML = DEMO_HTML['autism'];
+    $('b-ext-label').textContent = 'Structured';
+    $('ddb-icon').textContent = DEMO_META['autism'].icon;
+    $('ddb-title').textContent = DEMO_META['autism'].title;
+    $('ddb-title').style.color = DEMO_META['autism'].color;
+    $('ddb-body').textContent = DEMO_META['autism'].desc;
+
+    document.querySelectorAll('.d-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const mode = tab.dataset.mode;
+        activeMode = mode;
+
+        // Update tabs
+        document.querySelectorAll('.d-tab').forEach(t => { t.classList.remove('on'); t.setAttribute('aria-selected', 'false'); });
+        tab.classList.add('on'); tab.setAttribute('aria-selected', 'true');
+
+        // Update viewport class and content
+        viewport.className = `demo-viewport mode-${mode}`;
+        viewport.innerHTML = DEMO_HTML[mode];
+
+        // Update browser bar
+        $('b-ext-label').textContent = tab.textContent.trim().replace(/^[\S]+\s/, '');
+
+        // Update description
+        const meta = DEMO_META[mode];
+        $('ddb-icon').textContent = meta.icon;
+        $('ddb-title').textContent = meta.title;
+        $('ddb-title').style.color = meta.color;
+        $('ddb-body').textContent = meta.desc;
+
+        announce(meta.title + ' activated');
+      });
+
+      // Arrow key nav between tabs
+      tab.addEventListener('keydown', e => {
+        const tabs = [...document.querySelectorAll('.d-tab')], i = tabs.indexOf(tab);
+        if (e.key === 'ArrowRight') { e.preventDefault(); tabs[(i + 1) % tabs.length].focus(); }
+        if (e.key === 'ArrowLeft') { e.preventDefault(); tabs[(i - 1 + tabs.length) % tabs.length].focus(); }
+        if (e.key === 'Enter' || e.key === ' ') tab.click();
+      });
+    });
+  </script>
+</body>
+
+</html>
