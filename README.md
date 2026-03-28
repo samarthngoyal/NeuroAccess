@@ -59,6 +59,7 @@ This modular architecture allows NeuroAccess to analyze webpages, calculate acce
 ## Project Structure
 
 ```text
+
 neuroaccess/
 │
 ├── extension/
@@ -76,3 +77,4 @@ neuroaccess/
 │       └── accessibility.css
 │
 └── README.md
+
